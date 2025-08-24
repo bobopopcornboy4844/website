@@ -1,5 +1,11 @@
+body {
+  margin: 0;
+  height: 100vh;              /* Full viewport height */
+  display: flex;              /* Enable flexbox */
+  justify-content: center;    /* Center horizontally */
+  align-items: center;        /* Center vertically */
+}
+
 h1 {
-  display: block;
-  width: 50%;
-  margin: auto auto; /* 0 for top/bottom margin, auto for left/right */
+  font-size: 3rem;
 }
