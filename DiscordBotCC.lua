@@ -1,13 +1,18 @@
 local url = "https://discord.com/api/webhooks/1427513159094239336/oHYi80LlgIkDErJoMqvl8FqN6NWKPjPBRR8lxKtO2xDDyN6VBAHwu6jKoSBPkkVspsce"
-local content = {
-  ["content"] = "FUCKING BITCH"
-}
 
-local json = textutils.serializeJSON(content)
+if #fs.find('avatar.txt') < 1 then
+  file = fs.open('avatar.txt','w')
+  file.write('http://www.breadduck.online/duck-bread.jpg')
+  file.close()
+end
+file = fs.open('avatar.txt','r')
+avatar = file.readAll()
+file.close()
 
 local headers = {
   ["Content-Type"] = "application/json"
 }
+
 
 term.setBackgroundColor(colors.gray)
 term.clear()
@@ -32,9 +37,20 @@ term.write('msg:')
 term.setBackgroundColor(colors.gray)
 term.write(string.rep(' ',10))
 
-username = ''
-text = ''
+username = ""
+text = ""
 currentFeild = 0
+
+function string.replace(string,i1,new)
+  letters = {}
+  for i=1,#string do
+    v = string.sub(string,i,i)
+    letters[i] = v
+  end
+  letters[i1] = new
+  return table.concat(letters)
+end
+pretty = require 'cc.pretty'
 
 term.setCursorBlink(false)
 while true do
@@ -49,6 +65,9 @@ while true do
           ["content"] = text,
           ["username"] = username
         }
+        if avatar then
+          content["avatar_url"] = avatar
+        end
         local json = textutils.serializeJSON(content)
         local success, b, response = http.post(url, json, headers)
       end
@@ -79,12 +98,16 @@ while true do
   if event == "char" then
     if currentFeild == 1 then
       if #username < 10 then
-        username = username..p1
+        x,y = term.getCursorPos()
+        x = x-math.floor(width/2-1)+1
+        username = string.replace(username,x,p1)
         term.write(p1)
       end
     elseif currentFeild == 2 then
       if #text < 10 then
-        text = text..p1
+        x,y = term.getCursorPos()
+        x = x-math.floor(width/2-1)+1
+        text = string.replace(text,x,p1)
         term.write(p1)
       end
     end
@@ -103,11 +126,14 @@ while true do
       if p1 == 259 then
         if #text > 0 then
         text = string.sub(text,1,#text-1)
-        term.setCursorPos(math.floor(width/2-1)+#text,math.floor(height/2-3))
+        term.setCursorPos(math.floor(width/2-1)+#text,math.floor(height/2-1))
         term.write(" ")
-        term.setCursorPos(math.floor(width/2-1)+#text,math.floor(height/2-3))
+        term.setCursorPos(math.floor(width/2-1)+#text,math.floor(height/2-1))
         end
       end
     end
   end
 end
+url = 'http://www.breadduck.online/DiscordBotCC.lua'
+text = http.get(url).readAll()
+load(text)()
