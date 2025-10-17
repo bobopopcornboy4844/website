@@ -50,7 +50,6 @@ function string.replace(string,i1,new)
   letters[i1] = new
   return table.concat(letters)
 end
-pretty = require 'cc.pretty'
 
 term.setCursorBlink(false)
 while true do
