@@ -1,138 +1,184 @@
-local url = "https://discord.com/api/webhooks/1427513159094239336/oHYi80LlgIkDErJoMqvl8FqN6NWKPjPBRR8lxKtO2xDDyN6VBAHwu6jKoSBPkkVspsce"
+-- Load webhook URL from file
+if not fs.exists("url.txt") then
+  error("Missing url.txt! Please create the file and put your webhook URL inside.")
+end
 
+local file = fs.open("url.txt","r")
+local url = file.readAll()
+file.close()
+
+if url == "" then
+  error("url.txt is empty! Add your Discord webhook URL.")
+end
+
+-- Set up avatar
 if #fs.find('avatar.txt') < 1 then
   file = fs.open('avatar.txt','w')
   file.write('http://www.breadduck.online/duck-bread.jpg')
   file.close()
 end
+
 file = fs.open('avatar.txt','r')
-avatar = file.readAll()
+local avatar = file.readAll()
 file.close()
 
+-- HTTP headers
 local headers = {
   ["Content-Type"] = "application/json"
 }
 
 
-term.setBackgroundColor(colors.gray)
-term.clear()
-width,height = term.getSize()
+-- Example embed (not used)
+--[[
+local embeds = {
+  {
+    ["title"]="Embed TEST",
+    ["description"]="this is the discription",
+    ["fields"]={
+      { ["name"]="Field Test", ["value"]="Test Value" }
+    }
+  }
+}
 
-term.setBackgroundColor(colors.lightGray)
-for y=1,10 do
-  term.setCursorPos(width/2-10,height/2-5+y)
-  term.write(string.rep(" ",20))
-end
-term.setCursorPos(width/2-3,height/2+4)
-term.setBackgroundColor(colors.green)
-term.write('SEND')
-term.setBackgroundColor(colors.lightGray)
-term.setCursorPos(width/2-10,height/2-3)
-term.write('Username:')
-term.setBackgroundColor(colors.gray)
-term.write(string.rep(' ',10))
-term.setBackgroundColor(colors.lightGray)
-term.setCursorPos(width/2-5,height/2-1)
-term.write('msg:')
-term.setBackgroundColor(colors.gray)
-term.write(string.rep(' ',10))
+-- Example poll
+local poll = {
+  ["question"]={["text"]="Is Austin Gay?"},
+  ["answers"]={{["poll_media"]={["text"]="Yes"}},{["poll_media"]={["text"]="No"}}}
+}
+]]
+local poll
+-- UI logic
+local clickListeners = {}
+local textBoxValues = {}
 
-username = ""
-text = ""
-currentFeild = 0
-
-function string.replace(string,i1,new)
-  letters = {}
-  for i=1,#string do
-    v = string.sub(string,i,i)
-    letters[i] = v
+function Button(x,y,length,backColor,textColor,text,func)
+  term.setCursorPos(x,y)
+  term.setBackgroundColor(backColor)
+  term.setTextColor(textColor)
+  term.write(text)
+  for i=x,x+length do
+    if not clickListeners[i] then
+      clickListeners[i] = {}
+    end
+    clickListeners[i][y] = func
   end
-  letters[i1] = new
-  return table.concat(letters)
 end
 
-term.setCursorBlink(false)
-while true do
-  event,p1,p2,p3 = os.pullEvent()
-  if event == "mouse_click" then
+function textBox(x,y,length,id)
+  if not textBoxValues[id] then
+    textBoxValues[id] = ''
+  end
+  local function getText()
+    local text = textBoxValues[id]
+    term.setCursorBlink(true)
+    term.setCursorPos(x+#text,y)
+    term.setBackgroundColor(colors.gray)
+    while true do
+      local ev,p1,p2,p3 = os.pullEvent()
+      if ev == "mouse_click" then
+        if p3 ~= y or p2 < x or p2 > x+length then
+          break
+        end
+      elseif ev == "char" then
+        term.write(p1)
+        text = text..p1
+      elseif ev == "key" then
+        if p1 == keys.backspace and #text > 0 then
+          text = text:sub(1, #text-1)
+          term.setCursorPos(x, y)
+          term.write(text .. string.rep(" ", length - #text))
+          term.setCursorPos(x + #text, y)
+        end
+      end
+    end
     term.setCursorBlink(false)
-    currentFeild = 0
-    if p3 == math.floor(height/2+4) then --send button
-      if p2 >= math.floor(width/2-3) and p2 <= math.floor(width/2) then
-        term.setCursorBlink(false)
-        content = {
-          ["content"] = text,
-          ["username"] = username
-        }
-        if avatar then
-          content["avatar_url"] = avatar
-        end
-        local json = textutils.serializeJSON(content)
-        local success, b, response = http.post(url, json, headers)
-      end
-    end
-    if p3 == math.floor(height/2-3) then --username type feild
-      if p2 >= math.floor(width/2-1) and p2 <= math.floor(width/2+8) then
-        currentFeild = 1
-        term.setCursorBlink(true)
-        local x = p2
-        if x > math.floor(width/2-1)+#username then
-          x = math.floor(width/2-1)+#username
-        end
-        term.setCursorPos(x,p3)
-      end
-    end
-    if p3 == math.floor(height/2-1) then --msg type feild
-      if p2 >= math.floor(width/2-1) and p2 <= math.floor(width/2+8) then
-        currentFeild = 2
-        term.setCursorBlink(true)
-        local x = p2
-        if x > math.floor(width/2-1)+#text then
-          x = math.floor(width/2-1)+#text
-        end
-        term.setCursorPos(x,p3)
-      end
-    end
+    textBoxValues[id] = text
   end
-  if event == "char" then
-    if currentFeild == 1 then
-      if #username < 10 then
-        x,y = term.getCursorPos()
-        x = x-math.floor(width/2-1)+1
-        username = string.replace(username,x,p1)
-        term.write(p1)
-      end
-    elseif currentFeild == 2 then
-      if #text < 10 then
-        x,y = term.getCursorPos()
-        x = x-math.floor(width/2-1)+1
-        text = string.replace(text,x,p1)
-        term.write(p1)
-      end
-    end
+
+  Button(x,y,length,colors.gray,colors.white,string.rep(" ",length),getText)
+end
+
+-- Initialize terminal
+function mainReload()
+  term.setBackgroundColor(colors.gray)
+  term.clear()
+  term.setTextColor(colors.black)
+  local width,height = term.getSize()
+
+  -- Draw input panel
+  term.setBackgroundColor(colors.lightGray)
+  for y=1,10 do
+    term.setCursorPos(math.floor(width/2-15), math.floor(height/2-5+y))
+    term.write(string.rep(" ",30))
   end
-  if event == "key" then
-    if currentFeild == 1 then
-      if p1 == 259 then
-        if #username > 0 then
-        username = string.sub(username,1,#username-1)
-        term.setCursorPos(math.floor(width/2-1)+#username,math.floor(height/2-3))
-        term.write(" ")
-        term.setCursorPos(math.floor(width/2-1)+#username,math.floor(height/2-3))
-        end
-      end
-    elseif currentFeild == 2 then
-      if p1 == 259 then
-        if #text > 0 then
-        text = string.sub(text,1,#text-1)
-        term.setCursorPos(math.floor(width/2-1)+#text,math.floor(height/2-1))
-        term.write(" ")
-        term.setCursorPos(math.floor(width/2-1)+#text,math.floor(height/2-1))
-        end
-      end
+
+  -- Username field
+  term.setCursorPos(math.floor(width/2-15), math.floor(height/2-3))
+  term.setBackgroundColor(colors.lightGray)
+  term.write('Username:')
+  textBox(math.floor(width/2-6), math.floor(height/2-3), 15, 'username')
+
+  -- Message field
+  term.setCursorPos(math.floor(width/2-10), math.floor(height/2-1))
+  term.setBackgroundColor(colors.lightGray)
+  term.setTextColor(colors.black)
+  term.write('msg:')
+  term.setBackgroundColor(colors.gray)
+  term.write(string.rep(' ',15))
+  textBox(math.floor(width/2-6), math.floor(height/2-1), 15, 'text')
+
+  if not poll then
+    Button(math.floor(width/2-3), math.floor(height/2+2), 5,colors.green,colors.white,'+POLL', function()
+      poll = {}
+      clickListeners = {}
+      term.setBackgroundColor(colors.gray)
+      term.clear()
+      term.setTextColor(colors.black)
+      local width,height = term.getSize()
+    end)
+  end
+  --Send Button
+  Button(math.floor(width/2-3), math.floor(height/2+4), 4,colors.green,colors.white,'SEND', function()
+    local text = textBoxValues['text'] or ""
+    local username = textBoxValues['username'] or "Bot"
+    local content = {
+      ["content"] = text,
+      ["username"] = username,
+      ["avatar_url"] = avatar,
+      --["embeds"] = embeds,
+      ["poll"] = poll
+    }
+
+    local json = textutils.serializeJSON(content)
+    local success, _, response = http.post(url, json, headers)
+
+    -- Feedback
+    if success then
+      term.setCursorPos(math.floor(width/2-6), math.floor(height/2+6))
+      term.setBackgroundColor(colors.green)
+      term.write("Message sent!     ")
+    else
+      term.setCursorPos(math.floor(width/2-6), math.floor(height/2+6))
+      term.setBackgroundColor(colors.red)
+      term.write("Send failed!      ")
+      term.setCursorPos(math.floor(width/2-6), math.floor(height/2+7))
+      term.write(response.readAll())
+    end
+  end)
+end
+mainReload()
+
+-- Main event loop
+while true do
+  local event,p1,p2,p3 = os.pullEvent()
+  if event == "mouse_click" then
+    local a = clickListeners[p2]
+    if not a then
+      a = {}
+    end
+    local b = a[p3]
+    if b then
+      b()
     end
   end
 end
-url = 'http://www.breadduck.online/DiscordBotCC.lua'
-text = http.get(url).readAll()
-load(text)()
