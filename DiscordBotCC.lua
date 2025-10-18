@@ -1,6 +1,6 @@
 -- Load webhook URL from file
 if not fs.exists("url.txt") then
-  error("Missing url.txt! Please create the file and put your webhook URL inside.")
+  fs.open("uel.txt","w").close()
 end
 
 local file = fs.open("url.txt","r")
@@ -71,8 +71,17 @@ function textBox(x,y,length,id)
   local function getText()
     local text = textBoxValues[id]
     term.setCursorBlink(true)
-    term.setCursorPos(x+#text,y)
     term.setBackgroundColor(colors.gray)
+    if #text >=length-1 then
+      term.setCursorPos(x,y)
+      sub = #text-length
+      sub = sub+2
+      term.write(string.sub(text,sub))
+      term.write(" ")
+      term.setCursorPos(x+length-1,y)
+    else
+      term.setCursorPos(x+#text,y)
+    end
     while true do
       local ev,p1,p2,p3 = os.pullEvent()
       if ev == "mouse_click" then
@@ -80,16 +89,35 @@ function textBox(x,y,length,id)
           break
         end
       elseif ev == "char" then
-        term.write(p1)
-        text = text..p1
+        if #text >= length-1 then
+          term.setCursorPos(x,y)
+          sub = #text-length
+          sub = sub+3
+          text = text..p1
+          term.write(string.sub(text,sub))
+        else
+          term.write(p1)
+          text = text..p1
+        end
       elseif ev == "key" then
         if p1 == keys.backspace and #text > 0 then
           text = text:sub(1, #text-1)
           term.setCursorPos(x, y)
-          term.write(text .. string.rep(" ", length - #text))
-          term.setCursorPos(x + #text, y)
+          if #text >= length-1 then
+            sub = #text-length
+            sub = sub+2
+            term.write(string.sub(text,sub))
+            term.setCursorPos(x + length-1, y)
+          else
+            term.write(text .. string.rep(" ", length - #text))
+            term.setCursorPos(x + #text, y)
+          end
         end
       end
+    end
+    if #text >= length-1 then
+      term.setCursorPos(x,y)
+      term.write(string.sub(text,1,length-3).."...")
     end
     term.setCursorBlink(false)
     textBoxValues[id] = text
