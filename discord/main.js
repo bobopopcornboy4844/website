@@ -1,73 +1,92 @@
-let form = document.getElementById('sendF')
-let url = 'http://mb-factors.gl.at.ply.gg:22538'
-let msgs = {}
+let form = document.getElementById('sendF');
+let url = 'http://mb-factors.gl.at.ply.gg:22538';
+let msgs = {};
+let msgsDIV = document.getElementById('mid');
+
 async function postData(url, data) {
   try {
     const response = await fetch(url, {
-      method: 'POST', // Specify the HTTP method as POST
-      headers: {
-        'Content-Type': 'application/json' // Indicate that the request body is JSON
-      },
-      body: JSON.stringify(data) // Convert the JavaScript object to a JSON string
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const responseData = await response.json(); // Parse the JSON response
-    console.log('Success:', responseData);
+    const responseData = await response.json();
+    console.log('POST Success:', responseData);
     return responseData;
   } catch (error) {
-    console.error('Error:', error);
-    throw error; // Re-throw the error for further handling
+    console.error('POST Error:', error);
   }
 }
+
 async function getData(url) {
   try {
-    const response = await fetch(url, {
-      method: 'GET', // Specifyrt the JavaScript object to a JSON string
-    });
+    const response = await fetch(url, { method: 'GET' });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const responseData = await response.json(); // Parse the JSON response
-    console.log('Success:', responseData);
+    const responseData = await response.json();
+    console.log('GET Success:', responseData);
     return responseData;
   } catch (error) {
-    console.error('Error:', error);
-    throw error; // Re-throw the error for further handling
+    console.error('GET Error:', error);
   }
 }
-msgsDIV = document.getElementById('mid')
+
 async function refreshMsgs() {
-  msgs = await getData(url);
-  channelMsgs = msgs[document.getElementById('channel').value]
-  msgsDIV.innerHtml = ''
-  for (let i=0;i<channelMsgs.length;i++) {
-    let v = channelMsgs[i]
-    msgsDIV.innerHtml += '<a>'+v+'</a>'
+  try {
+    msgs = await getData(url);
+    if (!msgs) return;
+
+    let channel = document.getElementById('channel').value;
+    let channelMsgs = msgs[channel] || [];
+
+    // ⚠️ FIXED: use innerHTML (not innerHtml)
+    msgsDIV.innerHTML = '';
+
+    for (let i = 0; i < channelMsgs.length; i++) {
+      let v = channelMsgs[i];
+      // Simple text append
+      let msgEl = document.createElement('p');
+      msgEl.textContent = v;
+      msgsDIV.appendChild(msgEl);
+    }
+  } catch (err) {
+    console.error('Refresh failed:', err);
   }
 }
-refreshMsgs()
+
+// Automatically refresh every few seconds
+setInterval(refreshMsgs, 5000);
+
 async function send() {
-  let text = document.getElementById('msg').value;
-  let username = document.getElementById('username').value;
-  let channel = document.getElementById('channel').value;
+  let text = document.getElementById('msg').value.trim();
+  let username = document.getElementById('username').value.trim();
+  let channel = document.getElementById('channel').value.trim();
+
+  if (!text || !username || !channel) {
+    alert("Please fill in all fields!");
+    return;
+  }
+
   let con = { message: text, username, channel };
 
   try {
-    let res = await postData(url, con);
-    console.log("Server response:", res);
+    await postData(url, con);
+    document.getElementById('msg').value = ''; // clear after send
+    refreshMsgs(); // refresh messages after send
   } catch (err) {
     console.error("Failed to send message:", err);
   }
 }
 
 form.addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent default form submission
-    send()
-    console.log('Form submitted!');
+  event.preventDefault();
+  send();
 });
