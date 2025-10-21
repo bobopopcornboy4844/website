@@ -1,5 +1,6 @@
 let form = document.getElementById('sendF')
 let url = 'http://mb-factors.gl.at.ply.gg:22538'
+let msgs = {}
 async function postData(url, data) {
   try {
     const response = await fetch(url, {
@@ -22,6 +23,25 @@ async function postData(url, data) {
     throw error; // Re-throw the error for further handling
   }
 }
+async function getData(url) {
+  try {
+    const response = await fetch(url, {
+      method: 'GET', // Specifyrt the JavaScript object to a JSON string
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = await response.json(); // Parse the JSON response
+    console.log('Success:', responseData);
+    return responseData;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error; // Re-throw the error for further handling
+  }
+}
+msgs = getData(url);
 async function send() {
   let text = document.getElementById('msg').value;
   let username = document.getElementById('username').value;
