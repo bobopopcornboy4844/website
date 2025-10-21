@@ -54,7 +54,7 @@ async function refreshMsgs() {
       let v = channelMsgs[i];
       // Simple text append
       let msgEl = document.createElement('p');
-      msgEl.textContent = v;
+      msgEl.textContent = v.username +':' + v.message;
       msgsDIV.appendChild(msgEl);
     }
   } catch (err) {
