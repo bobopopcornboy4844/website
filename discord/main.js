@@ -41,7 +41,17 @@ async function getData(url) {
     throw error; // Re-throw the error for further handling
   }
 }
-msgs = getData(url);
+msgsDIV = document.getElementById('mid')
+async function refreshMsgs() {
+  msgs = await getData(url);
+  channelMsgs = msgs[document.getElementById('channel').value]
+  msgsDIV.innerHtml = ''
+  for (let i=0;i<channelMsgs.length;i++) {
+    let v = channelMsgs[i]
+    msgsDIV.innerHtml += '<a>'+v+'</a>'
+  }
+}
+refreshMsgs()
 async function send() {
   let text = document.getElementById('msg').value;
   let username = document.getElementById('username').value;
