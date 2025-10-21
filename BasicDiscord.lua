@@ -6,6 +6,14 @@ local headers = {
 }
 msgs = nil
 
+function BetterError(text)
+  sx,sy = term.getCursorPos()
+  term.setCursorPos(24,1)
+  term.setTextColor(colors.red)
+  term.setBackgroundColor(colors.lightGray)
+  term.write(text)
+  term.setCursorPos(sx,sy)
+end
 
 -- Example embed (not used)
 --[[
@@ -150,14 +158,21 @@ end
 textBox = {}
 textBox.Events = {}
 textBox.functions = {}
+textBox.finishFunc = {}
 textBox.CText = ''
 textBox.Values = {}
 textBox.Values['username'] = 'Mr.Tester'
 textBox.Values['channel'] = 'chat'
+textBox.currentId = nil
 
-function textBox.new(x,y,length,id)
+
+function textBox.new(x,y,length,id,enterFunc)
   local function getText()
     textBox.CText = textBox.Values[id]
+    textBox.finishFunc[id] = enterFunc
+    if not textBox.finishFunc[id] then
+      textBox.finishFunc[id] = function() end
+    end
     term.setCursorBlink(true)
     term.setBackgroundColor(colors.gray)
     term.setTextColor(colors.white)
@@ -171,6 +186,7 @@ function textBox.new(x,y,length,id)
     else
       term.setCursorPos(x+#textBox.CText,y)
     end
+    textBox.currentId = id
     function textBox.functions.mouse_click(p1,p2,p3)
       if p3 ~= y or p2 < x or p2 > x+length then
         for i,v in pairs(textBox.Events) do
@@ -182,7 +198,8 @@ function textBox.new(x,y,length,id)
           term.write(string.sub(textBox.CText,1,length-3).."...")
         end
         term.setCursorBlink(false)
-        textBox.Values[id] = textBox.CText
+        textBox.Values[textBox.currentId] = textBox.CText
+        textBox.finishFunc[textBox.currentId]()
       end
     end
     function textBox.functions.char(p1)
@@ -214,6 +231,8 @@ function textBox.new(x,y,length,id)
           term.write(textBox.CText .. string.rep(" ", length - #textBox.CText))
           term.setCursorPos(x + #textBox.CText, y)
         end
+      elseif p1 == keys.enter then
+        textBox.functions.mouse_click(-10,-10,-10)
       end
     end
 
@@ -266,6 +285,7 @@ function mainLoad()
   term.write('msg:')
   textBox.new(30, height, 15, 'text')
 
+  --channel field
   term.setCursorPos(1, 1)
   term.setBackgroundColor(colors.pink)
   term.setTextColor(colors.black)
@@ -320,6 +340,7 @@ visMsgs = {}
 scrollBarY = 0              -- top of scrollbar
 scrollBarH = height - 2      -- height of scrollbar
 function loadMsgs()
+  
   sx,sy = term.getCursorPos()
   scroll = {}
   channel = textBox.Values['channel']
@@ -336,7 +357,12 @@ function loadMsgs()
   extraDebugInfo.scrollBarH = scrollBarH
   
   drawScrollBar()
-
+  
+  
+  for i=2,height-1 do
+    term.setCursorPos(1,i)
+    term.blit(string.rep(' ',width-1),string.rep('6',width-1),string.rep('6',width-1))
+  end
   term.setBackgroundColor(colors.pink)
   for i=1, drawCount do
       term.setCursorPos(1,height-i)
@@ -351,7 +377,10 @@ function loadMsgs()
   eventHandeler.addTimer(1,timerF)
   term.setCursorPos(sx,sy)
 end
-
+textBox.finishFunc['channel'] = function()
+  scrollBarY = 0
+  loadMsgs()
+end
 
 function drawScrollBar()
     local bottom = height - 1
@@ -437,9 +466,9 @@ eventHandeler.addEvent('http_failure',http_e)
 oldMsgs = {}
 function timerF()
     local sx,sy = term.getCursorPos()
-    result,_,err = http.get(url..'?a='..math.random())
+    result,err,E = http.get(url..'?a='..math.random())
     if err then 
-        error(err)
+        BetterError(err)
     end
     if result then
         msgs = result.readAll()
