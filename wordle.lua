@@ -32,9 +32,20 @@ letters = {}
 for i=1,5 do
   letters[string.sub(chosenWord,i,i)] = true
 end
+for ii=1,7 do
+  term.setCursorPos(midleX-5,midleY-(3-ii)*2)
+  for i=1,5 do
+    cor = colors.gray
+    term.setBackgroundColor(cor)
+    term.write(' ')
+    term.write(' ')
+    term.write(' ')
+  end
+end
+term.setCursorBlink(true)
 while true do
   term.setCursorPos(midleX,midleY)
-  term.setBackgroundColor(colors.black)
+  term.setBackgroundColor(colors.gray)
   while true do
     event,p1,p2 = os.pullEvent()
     if event == 'char' then
@@ -56,9 +67,12 @@ while true do
       term.write(string.sub(word,i,i))
       term.write(' ')
     end
+    word = string.lower(word)
     term.write(string.rep(" ",(5-#word)*2))
+    term.setCursorPos(midleX-5+(#word*3),midleY-(3-current)*2)
   end
   term.setCursorPos(midleX-5,midleY-(3-current)*2)
+
   for i=1,#word do
     cor = colors.gray
     if string.sub(word,i,i) == string.sub(chosenWord,i,i) then
@@ -71,10 +85,17 @@ while true do
     term.write(string.sub(word,i,i))
     term.write(' ')
   end
+  if word == chosenWord then
+    term.setCursorPos(midleX,1)
+    print(chosenWord)
+    term.setCursorPos(midleX,2)
+    print(current)
+    break
+  end
   word = ''
   current = current + 1
   if current > 7 then
-    term.setCursorPos(1,1)
+    term.setCursorPos(midleX,1)
     print(chosenWord)
     break
   end
