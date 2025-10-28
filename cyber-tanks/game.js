@@ -808,7 +808,7 @@ function netMessage(resp)
 
 function netConnect()
 {
-	socket = io();
+	socket = io("https://xigency.herokuapp.com/");
 	socket.on('disconnect', function(){connected = false;});
 	socket.on('message', netMessage);
 }
