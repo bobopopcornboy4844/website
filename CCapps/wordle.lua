@@ -1,4 +1,4 @@
-wordUrl = 'https://raw.githubusercontent.com/PateronLLC/Wordle-Plus/refs/heads/main/wordlist_10000.txt'
+wordUrl = 'https://raw.githubusercontent.com/bobopopcornboy4844/website/refs/heads/main/wordlewordlist.txt'
 result,err,result = http.get(wordUrl)
 if result then
   file = fs.open('words.txt','w')
