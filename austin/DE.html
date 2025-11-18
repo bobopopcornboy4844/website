@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dungeon Escapist</title>
+<style>
+body{margin:0;overflow:hidden;background:#000;font-family:monospace;}
+canvas{display:block;}
+#titleScreen,#pauseMenu,#upgradeMenu{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;color:white;}
+#titleScreen{background:#111;flex-direction:column;}
+#pauseMenu,#upgradeMenu{background:rgba(34,34,34,0.9);flex-direction:column;gap:15px;display:none;}
+.btn{padding:12px 24px;margin:6px;font-size:20px;cursor:pointer;background:#222;color:#fff;border:2px solid #555;}
+#stats{position:absolute;top:10px;left:10px;color:white;background:rgba(0,0,0,0.5);padding:5px;border-radius:4px;}
+#battleUI{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:10px;display:flex;gap:10px;border-radius:6px;}
+button{margin:5px;padding:10px;font-size:16px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div id="titleScreen">
+<h1 style="font-size:48px;">Dungeon Escapist</h1>
+<p>Select your class:</p>
+<button class="btn" onclick="startGame('Fighter')">Fighter</button>
+<button class="btn" onclick="startGame('Wizard')">Wizard</button>
+<button class="btn" onclick="startGame('Rogue')">Rogue</button>
+<button class="btn" onclick="startGame('Adventurer')">Adventurer</button>
+</div>
+
+<div id="pauseMenu">
+<h2>Paused</h2>
+<button class="btn" onclick="resumeGame()">Resume</button>
+<button class="btn" onclick="resetGame()">Reset / Change Character</button>
+</div>
+
+<div id="upgradeMenu">
+<h3>Choose Upgrade:</h3>
+<button>+ HP & Heal</button>
+<button>Increase Attack</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+<div id="stats"></div>
+<div id="battleUI">
+<button onclick="playerTurn('attack')">Attack</button>
+<button id="specialBtn">Special</button>
+<button onclick="playerTurn('heal')">Heal</button>
+<button id="upgradeBtn" disabled>Upgrade</button>
+<button id="pauseBtn">Pause</button>
+</div>
+
+<script>
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
+
+let player=null, enemies=[], round=1, keys={}, battleQueue=[], attacks=[];
+let specialCooldownTimer=0, healCooldownTimer=0;
+let lastBossHp = 0;
+let gamePaused = false;
+const specialBtn=document.getElementById('specialBtn');
+const upgradeMenu=document.getElementById('upgradeMenu');
+const pauseMenu=document.getElementById('pauseMenu');
+const pauseBtn=document.getElementById('pauseBtn');
+const upgradeBtn=document.getElementById('upgradeBtn');
+
+let hpUpgradeAmount = 10;
+let damageMultiplier = 1.5;
+
+window.addEventListener('keydown',e=>keys[e.key]=true);
+window.addEventListener('keyup',e=>keys[e.key]=false);
+
+// ---------------------- Game Start ----------------------
+function startGame(cls){
+    document.getElementById('titleScreen').style.display='none';
+    round=1; specialCooldownTimer=0; healCooldownTimer=0; lastBossHp = 0;
+    createPlayer(cls);
+    startRound();
+    lastTime = performance.now();
+    gamePaused = false;
+    loop();
+}
+
+// ---------------------- Create Player ----------------------
+function createPlayer(cls){
+    player={x:canvas.width/2-14,y:canvas.height/2-14,w:28,h:28,speed:4,color:'green',hp:30,maxHp:30,attack:5,specialMultiplier:2,class:cls};
+    switch(cls){
+        case 'Fighter':
+            player.color='brown'; player.hp=35; player.maxHp=35; player.attack=8; player.specialMultiplier=1.25; specialBtn.innerText='Power Strike'; break;
+        case 'Wizard':
+            player.color='cyan'; player.hp=25; player.maxHp=25; player.attack=7; player.specialMultiplier=2; specialBtn.innerText='Fireball'; break;
+        case 'Rogue':
+            player.color='yellow'; player.hp=28; player.maxHp=28; player.attack=6.5; player.specialMultiplier=1.538; specialBtn.innerText='Double Attack'; break;
+        case 'Adventurer':
+            player.color='green'; player.hp=45; player.maxHp=45; player.attack=4; player.specialMultiplier=2.25; specialBtn.innerText='Balanced Strike'; break;
+    }
+}
+
+// ---------------------- Waves ----------------------
+function startRound(){
+    if(round>1000) return;
+    enemies=[];
+    if(round % 5 === 0){
+        let bossHp = (lastBossHp===0)?50+round*10:lastBossHp+50;
+        lastBossHp=bossHp;
+        enemies.push({x:Math.random()*(canvas.width-60),y:Math.random()*(canvas.height-60),w:60,h:60,color:'purple',speed:3.5,hp:bossHp,maxHp:bossHp,attack:10+round,isBoss:true});
+        upgradeBtn.disabled=true; // disabled until boss defeated
+    } else {
+        const enemyCount=Math.floor(Math.random()*4)+5;
+        for(let i=0;i<enemyCount;i++){
+            enemies.push({x:Math.random()*(canvas.width-28),y:Math.random()*(canvas.height-28),w:28,h:28,color:'red',speed:4,hp:10+round*10,maxHp:10+round*10,attack:2+round,isBoss:false});
+        }
+    }
+}
+
+// ---------------------- Movement ----------------------
+function canMove(x,y,w,h){return x>=0 && y>=0 && x+w<=canvas.width && y+h<=canvas.height;}
+
+// ---------------------- Battle ----------------------
+function playerTurn(action){
+    if(!player || enemies.length===0 || gamePaused) return;
+    if(action==='attack'){ battleQueue.push({actor:'player',type:'attack',enemy:closestEnemy()}); }
+    else if(action==='special' && specialCooldownTimer<=0){ battleQueue.push({actor:'player',type:'special',enemy:null}); specialCooldownTimer=25; }
+    else if(action==='heal' && healCooldownTimer<=0){ player.hp=player.maxHp; healCooldownTimer=60; }
+    processBattleQueue();
+}
+
+function closestEnemy(){
+    let closest=null, minDist=Infinity;
+    enemies.forEach(e=>{
+        let dx=e.x-player.x, dy=e.y-player.y, dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<minDist){ minDist=dist; closest=e; }
+    });
+    return closest;
+}
+
+// ---------------------- Upgrade Button ----------------------
+// Upgrade button click - can only click once per boss
+upgradeBtn.onclick = () => {
+    if(upgradeBtn.disabled) return;
+    upgradeMenu.style.display = 'flex';
+    gamePaused = true;
+    upgradeBtn.disabled = true; // disable immediately
+};
+
+// Upgrade menu buttons
+const upgradeButtons = upgradeMenu.querySelectorAll('button');
+upgradeButtons.forEach(btn => {
+    btn.onclick = () => {
+        if(!player) return;
+        if(btn.innerText.includes('HP')) {
+            player.maxHp += hpUpgradeAmount;
+            player.hp = player.maxHp;
+            hpUpgradeAmount += 10;
+        }
+        if(btn.innerText.includes('Attack')) {
+            player.attack *= damageMultiplier;
+            player.specialMultiplier *= damageMultiplier;
+            damageMultiplier += 0.5;
+        }
+        upgradeMenu.style.display = 'none';
+        gamePaused = false;
+    };
+});
+
+// ---------------------- Pause ----------------------
+pauseBtn.onclick=()=>{ gamePaused?resumeGame():pauseGame(); };
+function pauseGame(){ gamePaused=true; pauseMenu.style.display='flex'; }
+function resumeGame(){ gamePaused=false; pauseMenu.style.display='none'; upgradeMenu.style.display='none'; }
+function resetGame(){ gamePaused=false; enemies=[]; player=null; attacks=[]; round=1; hpUpgradeAmount=10; damageMultiplier=1.5; lastBossHp=0; document.getElementById('titleScreen').style.display='flex'; pauseMenu.style.display='none'; upgradeMenu.style.display='none'; }
+
+// ---------------------- Battle Queue ----------------------
+function processBattleQueue(){
+    if(attacks.length>0 || battleQueue.length===0 || gamePaused) return;
+    const action=battleQueue.shift();
+    if(action.actor==='player'){
+        if(action.type==='attack'||!action.type) launchAttack('player',action.enemy);
+        else if(action.type==='special') launchAttack('special',null);
+    } else if(action.actor==='enemy') launchAttack('enemy',action.enemy);
+}
+
+// ---------------------- Launch attack ----------------------
+function launchAttack(type,enemy){
+    if(type==='special'){
+        enemies.forEach(e=>{
+            attacks.push({x:player.x+player.w/2,y:player.y+player.h/2,targetX:e.x+e.w/2,targetY:e.y+e.h/2,type:'special',enemy:e,progress:0,damage:50,speed:0.2});
+        });
+        return;
+    }
+    let damage = (type==='enemy') ? enemy.attack : enemy ? (type==='special'?player.attack*player.specialMultiplier:player.attack) : 0;
+    attacks.push({x:player.x+player.w/2,y:player.y+player.h/2,targetX:enemy.x+enemy.w/2,targetY:enemy.y+enemy.h/2,type:type,enemy:enemy,progress:0,damage:damage,speed:0.2});
+}
+
+// ---------------------- Update ----------------------
+let lastTime=performance.now();
+function update(){
+    if(!player || gamePaused) return;
+    let now=performance.now();
+    let delta=(now-lastTime)/1000; lastTime=now;
+    if(specialCooldownTimer>0) specialCooldownTimer-=delta;
+    if(healCooldownTimer>0) healCooldownTimer-=delta;
+
+    let dx=0,dy=0;
+    if(keys['ArrowUp']||keys['w']) dy=-player.speed;
+    if(keys['ArrowDown']||keys['s']) dy=player.speed;
+    if(keys['ArrowLeft']||keys['a']) dx=-player.speed;
+    if(keys['ArrowRight']||keys['d']) dx=player.speed;
+    if(canMove(player.x+dx,player.y,player.w,player.h)) player.x+=dx;
+    if(canMove(player.x,player.y+dy,player.w,player.h)) player.y+=dy;
+
+    enemies.forEach(e=>{
+        let px=player.x-e.x, py=player.y-e.y, dist=Math.sqrt(px*px+py*py);
+        if(dist>0 && !gamePaused){ e.x+=(px/dist)*e.speed; e.y+=(py/dist)*e.speed; }
+        if(dist<30 && battleQueue.length===0) battleQueue.push({actor:'enemy',enemy:e,type:'attack'});
+    });
+
+    for(let i=attacks.length-1;i>=0;i--){
+        let a=attacks[i];
+        a.progress+=a.speed;
+        if(a.progress>=1){
+            a.enemy.hp-=a.damage;
+            if(a.enemy.hp<=0) enemies=enemies.filter(en=>en!==a.enemy);
+            if(a.type==='enemy'){player.hp-=a.damage;if(player.hp<=0) gameOver();}
+            attacks.splice(i,1); processBattleQueue();
+        }
+    }
+
+    // Enable upgrade button immediately after boss dies
+    if(enemies.length === 0 && player.hp>0 && round<1000){
+        if(round % 5 === 0) upgradeBtn.disabled = false; // immediately enable upgrade for current boss round
+        round++;
+        startRound();
+    }
+}
+
+// ---------------------- Draw ----------------------
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(player) ctx.fillStyle=player.color,ctx.fillRect(player.x,player.y,player.w,player.h);
+    enemies.forEach(e=>{
+        ctx.fillStyle=e.color; ctx.fillRect(e.x,e.y,e.w,e.h);
+        ctx.fillStyle='red'; ctx.fillRect(e.x,e.y-6,e.w*(e.hp/e.maxHp),4);
+    });
+    attacks.forEach(a=>{
+        let x=a.x+(a.targetX-a.x)*a.progress;
+        let y=a.y+(a.targetY-a.y)*a.progress;
+        ctx.fillStyle=(a.type==='special')?'cyan':'white';
+        ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2); ctx.fill();
+    });
+    if(player) document.getElementById('stats').innerHTML=
+        `Class:${player.class} HP:${Math.floor(player.hp)} Round:${round} Special:${specialCooldownTimer.toFixed(1)}s Heal:${healCooldownTimer.toFixed(1)}s`;
+}
+
+// ---------------------- Game Over ----------------------
+function gameOver(){alert('You died! Game Over'); player=null; enemies=[]; document.getElementById('titleScreen').style.display='flex';}
+
+// ---------------------- Main Loop ----------------------
+function loop(){update();draw();requestAnimationFrame(loop);}
+document.getElementById('specialBtn').onclick=()=>playerTurn('special');
+</script>
+</body>
+</html>
