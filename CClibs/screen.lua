@@ -3,13 +3,12 @@ local pixels = {}
 local acceptedColorsK = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'}
 local acceptedColors = {}
 for i,v in pairs(acceptedColorsK) do
-    acceptedColors[v] = i
+    acceptedColors[v] = colors.fromBlit(v)
 end
-acceptedColorsK = nil
 for x=1,width do
     pixels[x] = {}
     for y=1,height do
-        pixels[x][y] = "F"
+        pixels[x][y] = "f"
     end
 end
 
@@ -62,6 +61,11 @@ function draw()
             if not yITEMt then
                 yITEMt = 'f'
             end
+
+            term.setBackgroundColor(acceptedColors[yITEM])
+            term.setTextColor(acceptedColors[yITEMt])
+            term.setCursorPos(x,y)
+            term.write("\131")
         end
     end
 end
