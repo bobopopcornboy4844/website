@@ -1,10 +1,11 @@
 width,height = term.getSize()
 local pixels = {}
 local acceptedColorsK = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'}
+local fromBlit = {}
 local acceptedColors = {}
 screenLib = {}
 for i,v in pairs(acceptedColorsK) do
-    acceptedColors[v] = colors.fromBlit(v)
+    acceptedColors[v] = 2^tonumber(v,16)
 end
 for y=1,(height*2)+1 do
     pixels[y] = {}
@@ -59,11 +60,12 @@ local b = "\131"
 
 screenLib.draw = function()
     for y=1, height do
-        XROWblitT = ""
-        XROWblitB = ""
-        XROWblit  = ""
+        local yITEMt, yITEMb
+        local t_fg = {}
+        local t_bg = {}
+        local t_ch = {}
         for x=1, width do
-            if math.mod(y,2) == 1 then
+            if (y % 2) == 1 then
                 yITEMt = pixels[(y*2)][x]
                 yITEMb = pixels[(y*2)+1][x]
             else
@@ -76,14 +78,15 @@ screenLib.draw = function()
             if not (yITEMt and acceptedColors[yITEMt]) then
                 yITEMt = 'f'
             end
-            XROWblitB = XROWblitB..yITEMb
-            XROWblitT = XROWblitT..yITEMt
-            if math.mod(y,2) == 1 then
-                XROWblit = XROWblit..a
+            table.insert(t_bg,yITEMb)
+            table.insert(t_fg,yITEMt)
+            if (y % 2) == 1 then
+                table.insert(t_ch,a)
             else
-                XROWblit = XROWblit..b
+                table.insert(t_ch,b)
             end
         end
+        local XROWblitT, XROWblitB, XROWblit = table.concat(t_fg),table.concat(t_bg),table.concat(t_ch)
         term.setCursorPos(1,y)
         term.blit(XROWblit,XROWblitT,XROWblitB)
     end
