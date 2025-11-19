@@ -2,17 +2,14 @@ width,height = term.getSize()
 local pixels = {}
 local emptyPixels = {}
 local acceptedColorsK = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'}
-local acceptedColors = {}
 screenLib = {}
 for i,v in pairs(acceptedColorsK) do
     acceptedColors[v] = colors.fromBlit(v)
 end
 for y=1,(height*2)+1 do
     pixels[y] = {}
-    emptyPixels[y] = {}
     for x=1,width do
         pixels[y][x] = "f"
-        emptyPixels[y][x] = "f"
     end
 end
 
@@ -27,6 +24,15 @@ screenLib.getPixel = function(x,y)
         return pixels[y][x]
     end
     return nil,3
+end
+
+screenLib.clear = function()
+    for y=1,(height*2)+1 do
+        pixels[y] = {}
+        for x=1,width do
+            pixels[y][x] = "f"
+        end
+    end
 end
 
 screenLib.setPixel = function(x,y,Rc)
