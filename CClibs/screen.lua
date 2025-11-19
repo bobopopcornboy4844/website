@@ -7,12 +7,12 @@ screenLib = {}
 for i,v in pairs(acceptedColorsK) do
     acceptedColors[v] = colors.fromBlit(v)
 end
-for x=1,width do
-    pixels[x] = {}
-    emptyPixels[x] = {}
-    for y=1,height do
-        pixels[x][y] = "f"
-        emptyPixels[x][y] = "f"
+for y=1,(height*2)+1 do
+    pixels[y] = {}
+    emptyPixels[y] = {}
+    for x=1,width do
+        pixels[y][x] = "f"
+        emptyPixels[y][x] = "f"
     end
 end
 
@@ -20,11 +20,11 @@ screenLib.getPixel = function(x,y)
     if x < 1 or x > width then
         return nil,1
     end
-    if y < 1 or y > height then
+    if y < 1 or y > height*2 then
         return nil,2
     end
-    if pixels[x][y] then
-        return pixels[x][y]
+    if pixels[y][x] then
+        return pixels[y][x]
     end
     return nil,3
 end
@@ -38,37 +38,47 @@ screenLib.setPixel = function(x,y,Rc)
     if x < 1 or x > width then
         return nil,1
     end
-    if y < 1 or y > height then
+    if y < 1 or y > height*2 then
         return nil,2
     end
-    if pixels[x][y] then
-        pixels[x][y] = c
+    if pixels[y][x] then
+        pixels[y][x] = c
         return true
     end
     return nil,3
 end
 
+local a = "\143"
+local b = "\131"
+
 screenLib.draw = function()
-    for x=1, width do
-        xROW = pixels[x]
-        for y=1, height do
-            yITEM = xROW[y+1]
-            yITEMt = xROW[y]
-            if not yITEM then
-                yITEM = 'f'
+    for y=1, height do
+        XROWblitT = ""
+        XROWblitB = ""
+        XROWblit  = ""
+        for x=1, width do
+            if math.mod(y,2) == 1 then
+                yITEMt = pixels[(y*2)][x]
+                yITEMb = pixels[(y*2)+1][x]
+            else
+                yITEMt = pixels[(y*2)-1][x]
+                yITEMb = pixels[(y*2)][x]
             end
-            if not yITEMt then
+            if not (yITEMb and acceptedColors[yITEMb]) then
+                yITEMb = 'f'
+            end
+            if not (yITEMt and acceptedColors[yITEMt]) then
                 yITEMt = 'f'
             end
-
-            term.setBackgroundColor(acceptedColors[yITEM])
-            term.setTextColor(acceptedColors[yITEMt])
-            term.setCursorPos(x,y)
-            if math.mod(y,2) == 0 or true then
-                term.write("\143")
+            XROWblitB = XROWblitB..yITEMb
+            XROWblitT = XROWblitT..yITEMt
+            if math.mod(y,2) == 1 then
+                XROWblit = XROWblit..a
             else
-                term.write("\131")
+                XROWblit = XROWblit..b
             end
         end
+        term.setCursorPos(1,y)
+        term.blit(XROWblit,XROWblitT,XROWblitB)
     end
 end
