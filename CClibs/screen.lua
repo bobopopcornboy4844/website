@@ -1,7 +1,7 @@
 width,height = term.getSize()
 local pixels = {}
-local emptyPixels = {}
 local acceptedColorsK = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'}
+local acceptedColors = {}
 screenLib = {}
 for i,v in pairs(acceptedColorsK) do
     acceptedColors[v] = colors.fromBlit(v)
