@@ -59,19 +59,17 @@ local a = "\143"
 local b = "\131"
 
 screenLib.draw = function()
-    for y=1, height do
+    for y=1, height/2 do
         local yITEMt, yITEMb
         local t_fg = {}
         local t_bg = {}
         local t_ch = {}
+        local t_fg_2 = {}
+        local t_bg_2 = {}
+        local t_ch_2 = {}
         for x=1, width do
-            if (y % 2) == 1 then
-                yITEMt = pixels[(y*2)][x]
-                yITEMb = pixels[(y*2)+1][x]
-            else
-                yITEMt = pixels[(y*2)-1][x]
-                yITEMb = pixels[(y*2)][x]
-            end
+            yITEMt = pixels[(y*3)-2][x]
+            yITEMb = pixels[(y*3)-1][x]
             if not (yITEMb and acceptedColors[yITEMb]) then
                 yITEMb = 'f'
             end
@@ -80,14 +78,27 @@ screenLib.draw = function()
             end
             table.insert(t_bg,yITEMb)
             table.insert(t_fg,yITEMt)
-            if (y % 2) == 1 then
-                table.insert(t_ch,a)
-            else
-                table.insert(t_ch,b)
+            table.insert(t_ch,a)
+
+
+            yITEMt = pixels[(y*3)-1][x]
+            yITEMb = pixels[(y*3)][x]
+            if not (yITEMb and acceptedColors[yITEMb]) then
+                yITEMb = 'f'
             end
+            if not (yITEMt and acceptedColors[yITEMt]) then
+                yITEMt = 'f'
+            end
+            table.insert(t_bg_2,yITEMb)
+            table.insert(t_fg_2,yITEMt)
+            table.insert(t_ch_2,b)
         end
         local XROWblitT, XROWblitB, XROWblit = table.concat(t_fg),table.concat(t_bg),table.concat(t_ch)
-        term.setCursorPos(1,y)
+        term.setCursorPos(1,(y*2)-1)
+        term.blit(XROWblit,XROWblitT,XROWblitB)
+
+        local XROWblitT, XROWblitB, XROWblit = table.concat(t_fg_2),table.concat(t_bg_2),table.concat(t_ch_2)
+        term.setCursorPos(1,(y*2))
         term.blit(XROWblit,XROWblitT,XROWblitB)
     end
 end
