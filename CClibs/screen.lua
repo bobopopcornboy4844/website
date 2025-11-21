@@ -48,6 +48,8 @@ screenLib.setPixel = function(x,y,Rc)
     if y < 1 or y > height*2 then
         return nil,2
     end
+    x = math.floor(x)
+    y = math.floor(y)
     if pixels[y][x] then
         pixels[y][x] = c
         return true
