@@ -13,18 +13,14 @@ end
 function draw()
 end
 
-x,y = term.getCursorPos()
+map = {
+  {-15,20,15,20},
+  {-15,20,-20,15},
+  {-20,15,-20,-15},
+}
+
+x,y = 0,0
 
 while true do
   e,p1 = os.pullEvent()
-  if e == 'char' then
-    term.write(p1)
-  elseif e == 'key' then
-    if p1 == 257 then
-      y = y + 1
-      term.setCursorPos(x,y)
-    else
-      --term.write(p1)
-    end
-  end
 end
