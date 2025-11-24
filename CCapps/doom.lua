@@ -13,10 +13,19 @@ end
 function draw()
 end
 
+size = 20
+corner = 11.5
+
 map = {
-  {-15,20,15,20},
-  {-15,20,-20,15},
-  {-20,15,-20,-15},
+  {-corner,size,corner,size},   --top
+  {-size,corner,-size,-corner}, --left
+  {size,corner,size,-corner},   --right
+  {-corner,-size,corner,size},  --bottom
+
+  {-size,corner,-corner,size},  --top    left
+  {size,corner,corner,size},    --top    right
+  {-corner,-size,-size,-corner},--bottom left
+  {corner,-size,size,-corner},  --bottom right
 }
 
 x,y = 0,0
