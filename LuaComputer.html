@@ -8,7 +8,7 @@
   require.config({ paths: { copycat: "https://copy-cat.squiddev.cc/" } });
   // Find our #embed-computer element and inject a computer terminal into it.
   require(["copycat/embed"], setup => {
-    setup(document.getElementById("embed-computer",{
+    setup(document.getElementById("embed-computer"),{
           //persistId: 0,
 
           //hdFont: "https://copy-cat.squiddev.cc/term_font_hd-0506b6efe5f7feae.png",
@@ -26,5 +26,5 @@
       
           //peripherals: {back: "speaker"},
         });
-  }));
+  });
 </script>
