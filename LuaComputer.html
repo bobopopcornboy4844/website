@@ -7,5 +7,24 @@
   // Tell requirejs to load copycat/* from the website.
   require.config({ paths: { copycat: "https://copy-cat.squiddev.cc/" } });
   // Find our #embed-computer element and inject a computer terminal into it.
-  require(["copycat/embed"], setup => setup(document.getElementById("embed-computer")));
+  require(["copycat/embed"], setup => {
+    setup(document.getElementById("embed-computer",{
+          //persistId: 0,
+
+          //hdFont: "https://copy-cat.squiddev.cc/term_font_hd-0506b6efe5f7feae.png",
+
+          // A map of files to their contents. The values may be ArrayBuffers,
+          // ArrayBuffer views (such as UInt8Array) or plain strings.
+          files: {
+            "startup.lua": "if not fs.exist('appstore.lua') then\nresult,err = http.get('http://breadduck.online/appstore.lua')\nif not err then\nfile = fs.open('appstore.lua','w')\nfile.write(result.readAll())\nfile.close()\nend\nend\nif fs.exist('appstore.lua') then\nprint('type "appstore" and hit enter to get more apps')\nend",
+          },
+
+          //width: 80,
+          //height: 30,
+
+          //label: "My computer",
+      
+          //peripherals: {back: "speaker"},
+        });
+  }));
 </script>
