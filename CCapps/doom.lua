@@ -66,9 +66,10 @@ function draw()
     file.writeLine(lowest)
     lineHeight = lowest/2
     color = uLIST[lowestID]
+    
 
     for y=1,lineHeight do
-      screenLib.setPixel(x,y+(trueHeight/2)-(lineHeight/2),colors.toblit(color))
+      screenLib.setPixel(x,y+(trueHeight/2)-(lineHeight/2),colors.toBlit(color))
     end
   end
   file.close()
