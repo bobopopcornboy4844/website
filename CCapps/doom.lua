@@ -4,12 +4,14 @@ trueHeight = (height/2)*3
 
 function LineLineIntersection(X1,Y1,X2,Y2,X3,Y3,X4,Y4)
   local t_top = ((X1-X3)*(Y3-Y4)) - ((Y1-Y3)*(X3-X4))
+  local u_top = ((X1-X2)*(Y1-Y3)) - ((Y1-Y2)*(X1-X3))
   local t_bottom = ((X1-X2)*(Y3-Y4)) - ((Y1-Y2)*(X3-X4))
   local t = t_top/t_bottom
+  local u = u_top/t_bottom
   local ItX, ItY
   ItX = X1 + t*(X2-X1)
   ItY = Y1 + t*(Y2-Y1)
-  return ItX,ItY,t
+  return ItX,ItY,t,u
 end
 
 
@@ -35,10 +37,13 @@ map = {
   },
 }
 
-function calcRoom(lDir,room,listOfDIstances)
+function calcRoom(lDir,room,tLIST,uLIST)
   for i,v in pairs(room) do
-    local hitX,hitY,t = LineLineIntersection(x,y,x+math.sin(lDir),y+math.cos(lDir),  v[1],v[2],v[3],v[4])
-    listOfDIstances[#listOfDIstances+1] = t
+    local hitX,hitY,t,u = LineLineIntersection(x,y,x+math.sin(lDir),y+math.cos(lDir),  v[1],v[2],v[3],v[4])
+    if u > 0 and u < 1 then
+      tLIST[#tLIST+1] = t
+      uLIST[#uLIST+1] = u
+    end
   end
 end
 
@@ -48,7 +53,8 @@ function draw()
   for x=1,width do
     local lDir = dir-(fov/2)+x
     local tLIST = {}
-    calcRoom(lDir,map[currentRoom],tLIST)
+    local uLIST = {}
+    calcRoom(lDir,map[currentRoom],tLIST,uLIST)
     lowest = 99999999999
     lowestID = 1
     for i,v in pairs(tLIST) do
@@ -59,9 +65,10 @@ function draw()
     end
     file.writeLine(lowest)
     lineHeight = lowest/2
+    color = uLIST[lowestID]
 
     for y=1,lineHeight do
-      screenLib.setPixel(x,y+(trueHeight/2)-(lineHeight/2),'a')
+      screenLib.setPixel(x,y+(trueHeight/2)-(lineHeight/2),colors.toblit(color))
     end
   end
   file.close()
