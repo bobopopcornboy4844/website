@@ -1,30 +1,5 @@
-<div id="embed-computer"></div>
+<script src="fengari-web.js" type="text/javascript"></script>
 
-<!-- Any requirejs-compatible loader (https://requirejs.org/) will work. -->
-<script type="text/javascript" src="https://copy-cat.squiddev.cc/require.js"></script>
-
-<script>
-  // Tell requirejs to load copycat/* from the website.
-  require.config({ paths: { copycat: "https://copy-cat.squiddev.cc/" } });
-  // Find our #embed-computer element and inject a computer terminal into it.
-  require(["copycat/embed"], setup => {
-    setup(document.getElementById("embed-computer"),{
-          //persistId: 0,
-
-          //hdFont: "https://copy-cat.squiddev.cc/term_font_hd-0506b6efe5f7feae.png",
-
-          // A map of files to their contents. The values may be ArrayBuffers,
-          // ArrayBuffer views (such as UInt8Array) or plain strings.
-          files: {
-            "startup.lua": "if not fs.exists('appstore.lua') then\nresult,err = http.get('http://breadduck.online/appstore.lua')\nif not err then\nfile = fs.open('appstore.lua','w')\nfile.write(result.readAll())\nfile.close()\nend\nend\nif fs.exists('appstore.lua') then\nprint('type \"appstore\" and hit enter to get more apps')\nend",
-          },
-
-          //width: 80,
-          //height: 30,
-
-          //label: "My computer",
-      
-          //peripherals: {back: "speaker"},
-        });
-  });
+<script type="application/lua">
+print("Hello World!")
 </script>
