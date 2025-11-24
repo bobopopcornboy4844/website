@@ -16,7 +16,7 @@
           // A map of files to their contents. The values may be ArrayBuffers,
           // ArrayBuffer views (such as UInt8Array) or plain strings.
           files: {
-            "startup.lua": "if not fs.exist('appstore.lua') then\nresult,err = http.get('http://breadduck.online/appstore.lua')\nif not err then\nfile = fs.open('appstore.lua','w')\nfile.write(result.readAll())\nfile.close()\nend\nend\nif fs.exist('appstore.lua') then\nprint('type \"appstore\" and hit enter to get more apps')\nend",
+            "startup.lua": "if not fs.eists('appstore.lua') then\nresult,err = http.get('http://breadduck.online/appstore.lua')\nif not err then\nfile = fs.open('appstore.lua','w')\nfile.write(result.readAll())\nfile.close()\nend\nend\nif fs.eists('appstore.lua') then\nprint('type \"appstore\" and hit enter to get more apps')\nend",
           },
 
           //width: 80,
