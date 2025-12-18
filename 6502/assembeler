@@ -1,0 +1,839 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="imagetoolbar" content="no">
+	<meta name="format-detection" content="telephone=no">
+	<title>virtual 6502 Assembler</title>
+	<meta name="description" content="A JavaScript assembler for the 6502/6510 MPU">
+	<meta name="keywords" content="6502 assembler, 6510 assembler, MOS 6502, MOS 6510, JavaScript, mass:werk - media environments, masswerk.at">
+	<meta property="og:title" content="Virtual 6502 Assembler">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://www.masswerk.at/6502/assembler.html">
+	<meta property="og:image" content="https://www.masswerk.at/6502/virtual6502preview.png">
+	<meta property="og:image:type" content="image/png">
+	<meta property="og:image:width" content="760">
+	<meta property="og:image:height" content="490">
+	<meta property="og:site_name" content="Virtual 6502 Assembler">
+	<meta property="og:description" content="Virtual 6502 Assembler: A simple, but compatible 6502 assembler for the web.">
+	<meta name="twitter:image" content="https://www.masswerk.at/6502/virtual6502preview.png">
+	<link rel="image_src" href="https://www.masswerk.at/6502/virtual6502preview.png">
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<link rel="icon" href="favicon.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+	<!-- N. Landsteiner, mass:werk/www.masswerk.at 2005, 2021 -->
+	<script type="text/javascript" src="js/thememanager.js" defer></script>
+	<script type="text/javascript" src="js/6502assembler.js" defer></script>
+	<link rel="stylesheet" href="assets/virtual6502.css" type="text/css" charset="utf-8" />
+<style>
+@font-face {
+  font-family: 'Nunito Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-regular.eot');
+  src: local('Nunito Sans Regular'), local('NunitoSans-Regular'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-regular.eot?#iefix') format('embedded-opentype'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-regular.woff2') format('woff2'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-regular.woff') format('woff'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-regular.ttf') format('truetype'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-regular.svg#NunitoSans') format('svg');
+}
+@font-face {
+  font-family: 'Nunito Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/webfonts/NunitoSans/nunito-sans-v6-latin-ext_latin-700.eot');
+  src: local('Nunito Sans Bold'), local('NunitoSans-Bold'),
+       url('/webfonts/NunitoSans/nunito-sans-v6-latin-ext_latin-700.eot?#iefix') format('embedded-opentype'),
+       url('/webfonts/NunitoSans/nunito-sans-v6-latin-ext_latin-700.woff2') format('woff2'),
+       url('/webfonts/NunitoSans/nunito-sans-v6-latin-ext_latin-700.woff') format('woff'),
+       url('/webfonts/NunitoSans/nunito-sans-v6-latin-ext_latin-700.ttf') format('truetype'),
+       url('/webfonts/NunitoSans/nunito-sans-v6-latin-ext_latin-700.svg#NunitoSans') format('svg');
+}
+@font-face {
+  font-family: 'Nunito Sans';
+  font-style: italic;
+  font-weight: 400;
+  src: url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-italic.eot');
+  src: local('Nunito Sans Italic'), local('NunitoSans-Italic'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-italic.eot?#iefix') format('embedded-opentype'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-italic.woff2') format('woff2'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-italic.woff') format('woff'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-italic.ttf') format('truetype'),
+       url('/webfonts/NunitoSans/nunito-sans-v5-latin-ext_latin-italic.svg#NunitoSans') format('svg');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/webfonts/courier-prime/courier-prime-v2-latin-regular.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('/webfonts/courier-prime/courier-prime-v2-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('/webfonts/courier-prime/courier-prime-v2-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('/webfonts/courier-prime/courier-prime-v2-latin-regular.woff') format('woff'), /* Modern Browsers */
+       url('/webfonts/courier-prime/courier-prime-v2-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('/webfonts/courier-prime/courier-prime-v2-latin-regular.svg#CourierPrime') format('svg'); /* Legacy iOS */
+}
+</style>
+<script>
+// create a target for sibling apps
+window.name='at_masswerk_6502_assembler';
+window.addEventListener('unload', function() { window.name=''; }, false);
+</script>
+</head>
+<body>
+<header role="banner">
+<div id="header_content">
+<a id="site_logo" href="/" title="mass:werk &ndash; home">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="100"
+	 viewBox="0 0 750 480" xml:space="preserve" role="img" aria-label="Logo mass:werk">
+<circle id="slogoCircle" fill="#f73d44" cx="375" cy="240" r="229"/>
+<g id="slogoTypo1" fill="#231F20">
+	<path d="M204.020508,214.011719h12.924805v5.296875c3.919922-4.025879,8.581543-6.568359,15.467773-6.568359
+		c6.356445,0,13.136719,2.119141,15.785156,8.051758c3.919922-5.191406,9.322754-8.051758,16.526855-8.051758
+		c11.653809,0,18.751953,5.615234,18.751953,17.162598v37.715332h-12.925293v-32.523926
+		c0-6.14502-2.754395-10.488281-8.792969-10.488281c-7.204102,0-11.547852,7.098145-11.547852,14.725586v28.286621h-12.924805
+		v-32.523926c0-6.14502-2.754395-10.488281-9.004883-10.488281c-6.992188,0-11.335938,7.098145-11.335938,14.725586v28.286621
+		h-12.924805V214.011719z"/>
+	<path d="M343.121094,258.613281c0,5.508789,1.271484,7.839844,2.012695,9.004883h-13.666504
+		c-0.847168-1.271484-1.270996-3.496094-1.270996-4.873047c-4.979492,4.025391-10.806152,6.144531-17.480469,6.144531
+		c-10.17041,0-18.222168-6.462891-18.222168-16.844727c0-10.488281,8.369629-15.149902,16.314941-16.73877l5.40332-1.05957
+		c4.661133-0.953613,10.700195-2.013184,13.984375-3.178223v-1.589355c0-5.296875-4.555664-6.780273-10.17041-6.780273
+		c-7.521973,0-9.958496,2.225098-9.958496,8.051758l-12.925293-0.529785c0-12.606934,11.124023-17.480469,22.883789-17.480469
+		c11.547363,0,23.095215,2.331055,23.095215,17.586426V258.613281z M330.196289,240.814941
+		c-1.695312,0.847656-3.813965,1.48291-6.144531,1.906738l-7.098145,1.483398
+		c-4.873535,0.953613-8.899414,2.330566-8.899414,7.416016c0,4.025879,3.708008,6.673828,8.369629,6.673828
+		c6.038574,0,13.772461-2.96582,13.772461-9.852051V240.814941z"/>
+	<path d="M391.851562,230.962402c-1.588867-3.496094-5.826172-7.62793-13.454102-7.62793
+		c-6.038574-0.105957-9.852539,2.012695-9.852539,5.191406c0,9.322754,33.794922,1.376953,33.794922,21.611816
+		c0,12.924805-11.546875,18.751953-23.836426,18.751953c-12.606934,0-21.188477-4.34375-25.955566-9.74707l9.746582-7.521484
+		c2.966309,4.343262,8.581055,6.673828,15.467285,6.673828c6.144531,0,10.382812-3.389648,10.382812-6.25
+		c0-9.111328-33.160156-1.589355-33.160156-21.930176c0-12.077148,10.488281-17.374512,23.730957-17.374512
+		c12.818848,0,19.599121,6.568359,22.14209,9.746582L391.851562,230.962402z"/>
+	<path d="M446.941406,230.962402c-1.588867-3.496094-5.827148-7.62793-13.455078-7.62793
+		c-6.038086-0.105957-9.852539,2.012695-9.852539,5.191406c0,9.322754,33.795898,1.376953,33.795898,21.611816
+		c0,12.924805-11.547852,18.751953-23.836914,18.751953c-12.607422,0-21.188477-4.34375-25.956055-9.74707l9.74707-7.521484
+		c2.96582,4.343262,8.581055,6.673828,15.467773,6.673828c6.144531,0,10.381836-3.389648,10.381836-6.25
+		c0-9.111328-33.160156-1.589355-33.160156-21.930176c0-12.077148,10.488281-17.374512,23.731445-17.374512
+		c12.819336,0,19.599609,6.568359,22.141602,9.746582L446.941406,230.962402z"/>
+	<path id="logoColon" d="M468.765625,213.375977h14.196289v14.620117h-14.196289V213.375977z M468.765625,252.998047h14.196289
+		v14.620117h-14.196289V252.998047z"/>
+	<path d="M493.555664,214.011719h13.348633l9.004883,36.443848h0.211914l10.064453-36.443848h11.65332
+		l10.064453,36.443848h0.211914l9.005859-36.443848h13.348633l-15.467773,53.606445h-12.712891l-10.170898-35.914062h-0.211914
+		l-10.169922,35.914062h-12.712891L493.555664,214.011719z"/>
+	<path d="M589.960938,243.887207c0.211914,7.945801,6.885742,13.136719,13.87793,13.136719
+		c10.170898,0,14.196289-5.82666,15.467773-7.62793l10.912109,6.356934
+		c-4.026367,6.144531-11.759766,13.136719-26.379883,13.136719c-17.374023,0-27.438477-12.077637-27.438477-28.074707
+		s10.064453-28.074707,27.438477-28.074707c17.904297,0,25.744141,11.97168,25.744141,31.146973H589.960938z
+		 M616.022461,233.928711c0-2.860352-3.496094-10.594238-12.183594-10.594238c-7.521484,0-12.500977,4.873535-13.87793,10.594238
+		H616.022461z"/>
+	<path d="M640.811523,214.011719h12.924805v7.416016h0.211914c3.072266-6.14502,9.004883-8.6875,16.527344-8.6875
+		v13.136719c-8.793945,0-16.739258,4.131836-16.739258,15.785645v25.955566h-12.924805V214.011719z"/>
+	<path d="M680.220703,192.1875h12.924805v41.953125l20.34082-20.128906h16.739258l-20.764648,20.870605
+		l22.777344,32.73584h-15.785156l-15.99707-24.048828l-7.310547,7.204102v16.844727h-12.924805V192.1875z"/>
+</g>
+<path id="slogoPassmark" fill="none" stroke="#231F20" stroke-width="1" stroke-miterlimit="3.86369" d="M113.63916,285.709961v-92.118652
+	 M86.433105,239.655762c0-15.029297,12.181152-27.208496,27.206055-27.208496s27.206055,12.179199,27.206055,27.208496
+	c0,15.020996-12.181152,27.203613-27.206055,27.203613S86.433105,254.676758,86.433105,239.655762L86.433105,239.655762z
+	 M159.697266,239.655762H67.579102"/>
+<g id="slogoTypo2" fill="none" stroke="#000000" stroke-width="1">
+	<path d="M219.543457,313.40332c0-1.776367-0.624023-3.144531-2.712402-3.144531c-2.256348,0-3.120117,1.751953-3.120117,3.672852
+		v6.624023h-1.632324v-7.152344c0-1.704102-0.527832-3.144531-2.592285-3.144531c-2.304199,0-3.240234,1.632812-3.240234,3.672852
+		v6.624023h-1.65625v-11.280273h1.560059v1.583984h0.432129c0.696289-1.200195,1.92041-1.920898,3.168457-1.920898
+		c1.583984,0,2.976074,0.52832,3.768066,2.400391c1.008301-1.583984,2.352539-2.400391,3.768555-2.400391
+		c2.424316,0,3.888184,1.392578,3.888184,3.816406v7.800781h-1.631836V313.40332z"/>
+	<path d="M244.478027,315.587891c-0.023926,2.087891,1.031738,4.175781,3.47998,4.175781
+		c1.800293,0,2.880371-0.816406,3.264648-2.496094l1.704102,0.095703c-0.624023,2.352539-2.544434,3.52832-4.992676,3.52832
+		c-3.504395,0-5.232422-2.519531-5.232422-5.879883c0-3.480469,1.65625-6.073242,5.304688-6.073242
+		c3.408203,0,5.088379,2.328125,5.088379,5.617188v0.551758h-8.592773L244.478027,315.587891z M244.478027,314.027344h6.840332
+		c-0.095703-2.328125-1.200195-3.959961-3.504395-3.959961C245.677734,310.067383,244.549805,311.915039,244.478027,314.027344z"/>
+	<path d="M283.094238,318.899414h-0.671875l0.120117,0.240234c-0.768066,1.224609-2.112305,1.751953-3.552246,1.751953
+		c-3.52832,0-5.088867-2.664062-5.088867-5.976562c0-3.311523,1.70459-5.976562,5.18457-5.976562
+		c1.44043,0,2.78418,0.52832,3.576172,1.87207h0.432129v-6.984375h1.65625v14.857422c0,0.624023,0,1.248047,0.023926,1.87207
+		h-1.65625C283.118164,320.099609,283.094238,319.620117,283.094238,318.899414z M279.421875,310.09082
+		c-2.879883,0-3.744141,2.520508-3.744141,4.800781c0,2.255859,0.936035,4.848633,3.720215,4.848633
+		c2.880371,0,3.744629-2.544922,3.744629-4.825195c0-2.183594-1.032227-4.824219-3.744629-4.824219H279.421875z"/>
+	<path d="M306.82959,303.826172h1.87207v1.87207h-1.87207V303.826172z M306.925293,309.275391h1.65625v11.280273h-1.631836
+		L306.925293,309.275391z"/>
+	<path d="M338.894043,320.603516c-0.695801,0-0.839844-0.935547-0.983887-1.799805l-0.384277,0.167969
+		c-0.888184,1.320312-2.208008,1.919922-3.720215,1.919922c-1.895996,0-3.720215-1.103516-3.720215-3.072266
+		c0-1.967773,1.104004-2.904297,2.592285-3.383789c0.744141-0.240234,1.60791-0.360352,2.472168-0.432617
+		c0.86377-0.071289,1.704102-0.095703,2.687988-0.143555c0.023926-0.456055,0.04834-0.696289,0.04834-0.936523
+		c0-2.015625-0.888184-2.855469-2.904297-2.855469c-1.39209,0-2.376465,0.743164-2.520508,2.135742l-1.704102-0.047852
+		c0.26416-2.255859,1.896484-3.216797,4.17627-3.216797c2.544434,0,4.536621,0.864258,4.536621,3.600586v5.544922
+		c0,0.503906,0.120117,1.248047,0.744141,1.511719c0.023926,0.3125,0.023926,0.648438,0.023926,0.959961
+		c-0.167969,0.024414-0.359863,0.047852-0.552246,0.047852C339.422363,320.603516,339.134277,320.603516,338.894043,320.603516z
+		 M331.861328,317.53125c0,1.536133,1.224121,2.232422,2.544434,2.232422c1.416016,0,3.576172-1.34375,3.576172-3.047852
+		c0-1.44043-0.719727-1.824219-1.512207-1.87207C335.029785,314.699219,331.861328,315.227539,331.861328,317.53125z"/>
+	<path d="M387.733398,315.587891c-0.024414,2.087891,1.032227,4.175781,3.480469,4.175781
+		c1.799805,0,2.879883-0.816406,3.263672-2.496094l1.704102,0.095703c-0.624023,2.352539-2.543945,3.52832-4.992188,3.52832
+		c-3.503906,0-5.232422-2.519531-5.232422-5.879883c0-3.480469,1.65625-6.073242,5.304688-6.073242
+		c3.408203,0,5.087891,2.328125,5.087891,5.617188v0.551758h-8.592773L387.733398,315.587891z M387.733398,314.027344h6.84082
+		c-0.09668-2.328125-1.200195-3.959961-3.504883-3.959961C388.933594,310.067383,387.805664,311.915039,387.733398,314.027344z"/>
+	<path d="M425.774414,313.331055c0-1.87207-0.816406-3.072266-2.832031-3.072266c-2.352539,0-3.360352,1.751953-3.360352,3.792969
+		v6.503906h-1.65625v-11.280273h1.631836v1.655273h0.431641c0.720703-1.295898,2.016602-1.992188,3.360352-1.992188
+		c2.496094,0,4.081055,1.344727,4.081055,3.913086v7.704102h-1.65625V313.331055z"/>
+	<path d="M452.773438,320.555664l-4.44043-11.280273h1.776367l3.503906,9.192383l0.335938-0.263672l3.3125-8.928711h1.728516
+		l-4.464844,11.280273H452.773438z"/>
+	<path d="M479.869141,303.826172h1.873047v1.87207h-1.873047V303.826172z M479.96582,309.275391h1.65625v11.280273h-1.632812
+		L479.96582,309.275391z"/>
+	<path d="M505.693359,314.579102v5.976562h-1.65625v-11.280273h1.631836v2.160156H506.125
+		c0.671875-1.728516,1.96875-2.329102,3.648438-2.329102c0,0-0.024414,0.048828,0,0.072266
+		c0.047852,0.024414,0.072266,0.072266,0.120117,0.120117l0.024414,0.024414v1.439453
+		c-0.264648-0.023438-0.52832-0.047852-0.792969-0.047852C506.605469,310.714844,505.693359,312.347656,505.693359,314.579102z"/>
+	<path d="M530.149414,314.915039c0-3.479492,1.992188-5.976562,5.568359-5.976562s5.568359,2.49707,5.568359,5.976562
+		c0,3.480469-1.992188,5.976562-5.568359,5.976562S530.149414,318.395508,530.149414,314.915039z M531.925781,314.915039
+		c0,2.352539,0.863281,4.848633,3.791992,4.848633c2.927734,0,3.791992-2.496094,3.791992-4.848633
+		c0-2.351562-0.864258-4.847656-3.791992-4.847656C532.789062,310.067383,531.925781,312.563477,531.925781,314.915039z"/>
+	<path d="M570.757812,313.331055c0-1.87207-0.816406-3.072266-2.832031-3.072266c-2.352539,0-3.360352,1.751953-3.360352,3.792969
+		v6.503906h-1.65625v-11.280273h1.631836v1.655273h0.431641c0.720703-1.295898,2.016602-1.992188,3.360352-1.992188
+		c2.49707,0,4.081055,1.344727,4.081055,3.913086v7.704102h-1.65625V313.331055z"/>
+	<path d="M609.637695,313.40332c0-1.776367-0.624023-3.144531-2.711914-3.144531c-2.255859,0-3.120117,1.751953-3.120117,3.672852
+		v6.624023h-1.631836v-7.152344c0-1.704102-0.52832-3.144531-2.592773-3.144531c-2.303711,0-3.240234,1.632812-3.240234,3.672852
+		v6.624023h-1.65625v-11.280273h1.560547v1.583984h0.431641c0.696289-1.200195,1.919922-1.920898,3.167969-1.920898
+		c1.584961,0,2.976562,0.52832,3.768555,2.400391c1.007812-1.583984,2.352539-2.400391,3.768555-2.400391
+		c2.423828,0,3.888672,1.392578,3.888672,3.816406v7.800781h-1.632812V313.40332z"/>
+	<path d="M634.572266,315.587891c-0.024414,2.087891,1.032227,4.175781,3.480469,4.175781
+		c1.799805,0,2.879883-0.816406,3.263672-2.496094l1.704102,0.095703c-0.624023,2.352539-2.543945,3.52832-4.992188,3.52832
+		c-3.503906,0-5.232422-2.519531-5.232422-5.879883c0-3.480469,1.65625-6.073242,5.304688-6.073242
+		c3.408203,0,5.087891,2.328125,5.087891,5.617188v0.551758h-8.592773L634.572266,315.587891z M634.572266,314.027344h6.84082
+		c-0.09668-2.328125-1.200195-3.959961-3.504883-3.959961C635.772461,310.067383,634.644531,311.915039,634.572266,314.027344z"/>
+	<path d="M672.613281,313.331055c0-1.87207-0.816406-3.072266-2.832031-3.072266c-2.352539,0-3.360352,1.751953-3.360352,3.792969
+		v6.503906h-1.65625v-11.280273h1.631836v1.655273h0.431641c0.720703-1.295898,2.016602-1.992188,3.360352-1.992188
+		c2.49707,0,4.081055,1.344727,4.081055,3.913086v7.704102h-1.65625V313.331055z"/>
+	<path d="M698.556641,318.204102c0,0.863281,0.456055,1.439453,1.368164,1.439453c0.335938,0,0.671875-0.047852,0.983398-0.120117
+		v1.200195c-0.503906,0.072266-1.007812,0.167969-1.511719,0.167969c-1.992188,0-2.472656-0.503906-2.472656-2.47168v-7.993164
+		l-1.992188,0.024414v-1.200195l1.96875,0.024414v-3.121094l1.65625-0.263672v3.384766l2.47168-0.024414v1.200195
+		l-2.47168-0.024414V318.204102z"/>
+	<path d="M728.701172,312.298828c-0.09668-1.583984-1.464844-2.231445-2.856445-2.231445
+		c-1.200195,0-2.592773,0.479492-2.592773,2.040039c0,0.81543,0.624023,1.223633,1.344727,1.488281
+		c0.695312,0.263672,1.65625,0.431641,2.591797,0.671875c1.896484,0.431641,3.552734,1.103516,3.552734,3.143555
+		c0,2.544922-2.592773,3.480469-4.920898,3.480469c-2.423828,0-4.368164-1.103516-4.583984-3.551758l1.751953-0.09668
+		c0.143555,1.704102,1.488281,2.520508,3.09668,2.520508c1.319336,0,2.879883-0.52832,2.879883-2.255859
+		c0-0.864258-0.576172-1.295898-1.320312-1.583984c-0.335938-0.144531-0.767578-0.240234-1.200195-0.335938
+		c-0.456055-0.09668-0.912109-0.192383-1.368164-0.288086c-1.87207-0.408203-3.52832-1.008789-3.52832-3.09668
+		c0-2.208008,2.232422-3.264648,4.296875-3.264648c2.160156,0,4.511719,1.008789,4.560547,3.264648L728.701172,312.298828z"/>
+</g>
+<image id="slogoFallback" src="/visuals/logo-100px.png" xlink:href="" display="none" alt="mass:werk" width="100" height="65"></image>
+</svg></a>
+<h1><span class="virtual">virtual</span> 6502 <span class="app">/ Assembler</span></h1>
+<nav id="relatedLinks" aria-label="Related Links">
+	<ul>
+		<li><a href="./" target="at_masswerk_6502_virtual6502">Emulator</a></li>
+		<li><a href="disassembler.html" target="at_masswerk_6502_disassembler">Disassembler</a></li>
+		<li><a href="prg-edit.html" target="at_masswerk_6502_prgedit">Edit</a></li>
+		<li><a href="6502_instruction_set.html" target="at_masswerk_6502_instset">6502 Instruction Set</a></li>
+	</ul>
+</nav>
+<nav id="colorNav" aria-label="Set Color Scheme">
+	<ul>
+		<li><a id="colorNavDark" href="#" onclick="ThemeManager.setDarkMode(true);return false;">Dark</a></li>
+		<li><a id="colorNavLight" href="#" onclick="ThemeManager.setDarkMode(false);return false;">Light</a></li>
+	</ul>
+</nav>
+</div>
+</header>
+<div id="gradient" aria-hidden="true"></div>
+<main id="content">
+
+	<table border="0" cellspacing="5" cellpadding="0" class="asmTable">
+	<tbody>
+	<tr valign="top">
+	<td class="display2">src:</td>
+	<td class="display2">object code:</td>
+	</tr>
+	<tr valign="top">
+	<td><textarea name="srcfield" id="srcfield" class="formField" rows="20" cols="40" wrap="virtual" dir="ltr" translate="no" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="enter or paste source text here or drag &amp; drop a text file"></textarea></td>
+	<td><textarea id="codefield" class="formField" rows="20" cols="40" wrap="virtual" readonly dir="ltr" translate="no" spellcheck="false" ondblclick="if (this.select) {this.select();return false;}" title="double-click to select"></textarea></td>
+	</tr>
+	<tr valign="middle">
+	<td colspan="2" style="padding: 0 2px 0 0;"><table border="0" cellspacing="0" cellpadding="0" width="100%" style="margin:-2px 0 2px 0;">
+		<tr valign="middle"">
+		<td width="50%" style="overflow: hidden;"><span class="display2" style="white-space: nowrap;">load</span><input type="file" id="fileLoader" class="fileLoader" value="" onchange="assembler.loadFile(); return false;" title="Load from disk..." style="color: #253850; margin-left: 5px; vertical-align: middle;" /></td>
+		<td width="25%" id="outputOption" class="display2" nowrap><input type="checkbox" id="showAddress" onchange="assembler.setAddressDisplay(this.checked)" style="margin-left: 6px;"> <label for="showAddress" title="include addresses at the start of each line" class="cbxLabel">show addresses</label></td>
+		<td width="25%" class="display2" id="downloadLink"><button onclick="assembler.getBinary();" class="wide" style="margin: 2px 3px 0 0;" >Download Binary</button></td>
+		</tr>
+		</table></td>
+	</tr>
+	<tr valign="middle">
+		<td class="display2" nowrap><input type="checkbox" id="cbxSetBBCMode" onchange="assembler.setBBCMode(this.checked);" style="margin-left: 0.5em;"> <label for="cbxSetBBCMode" title="toggle compatibility mode for BBC Micro syntax. &#x0a;see the info button &quot;(i)&quot; for details" class="cbxLabel"><span class="bbc-micro" title="BBC Micro logo" role="img"></span> BBC Micro mode</label> <a role="button" href="#" onclick="assembler.showBBCInfo(); return false;" class="infoLink" title="about BBC compatibility mode&hellip;">i</a></td>
+		<td align="right" id="codeLink" class="display2"><a href="./#getCode" target="at_masswerk_6502_virtual6502" onclick="return assembler.transferCodeToEmulator();" class="wide" style="margin: 0 5px 2px 0;" role="button" title="open assembler and transfer code">Show in Emulator</a></td>
+	</tr>
+	<tr height="50">
+		<td class="display2" valign="bottom">listing:</td>
+		<td align="right" valign="top"><button onclick="assembler.start();" class="wide" style="margin-right: 5px;" >Assemble</button></td>
+	</tr>
+	<tr valign="top">
+	<td colspan="2" style="padding: 2px 10px 0 2px;"><textarea id="listing" class="formField" rows="21" cols="80" wrap="virtual" readonly dir="ltr" translate="no" spellcheck="false" style="width: 100%;"></textarea></td>
+	</tr>
+	</tbody>
+	</table>
+
+<section id="description">
+	<h1>Instructions</h1>
+	<ul>
+		<li>Select your preferred color scheme by clicking the options <em>&quot;Dark&quot;</em> and <em>&quot;Light&quot;</em> at the top right.</li>
+		<li>Paste, drag-and-drop, or upload (using the file dialog button) the source into the source field.</li>
+		<li>Click the button <em>&quot;Assemble&quot;</em>.</li>
+		<li>Observe the listing and edit the source as necessary.</li>
+		<li>Copy the resulting object code for further use.<br />(Uncheck the option <em>&quot;show address&quot;</em> for the pure byte sequence.)<br />You can convert the hex-byte sequence to a BASIC loader program <a href="bytes2basic.html" target="at_masswerk_6502_bytes2basic">here</a>.</li>
+		<li>A successful assembly will also reveal a button to transfer the code to the <a href="./" target="at_masswerk_6502_virtual6502">emulator</a> and another button to download the object file. Choosing the file download will reveal a dialog with options for a standard binary file or a Commodore PRG-file. Select your preferred format and click <em>&quot;Generate&quot;,</em> then either click the link to download the file to your download folder or right-click the link and select &quot;Save as&hellip;&quot; (the exact wording depends on the browser) from the context menu.</li>
+	</ul>
+
+	<h1>Description</h1>
+	<p>This is a simple 2-pass MOS 6502 assembler optimized for compatibility and to accept a broad variety of syntax styles. The general idea is that it should work with any code of somewhat conventional and/or sane format.</p>
+	<p>A first pass determines instruction lengths and addresses, while the second pass resolves final values and generates the object code (the machine language program).<br />
+	In the listing, the first pass shows how the assembler &quot;sees&quot; the source, while the second pass represents what the assembler actually resolves and lists this in a normalized format, which is close to the original MOS notation.</p>
+	<p>A special &quot;BBC Micro mode&quot; activates additional features to provide compatibility with the syntax used for embedded assembler code in BBC BASIC, while it also applies some restriction to the general format.</p>
+
+	<h2>Basic Syntax</h2>
+	<p>The assembler supports common 6502 assembler syntax styles. Mind that there <em>must</em> be a seperating white space between labels, opcodes, and any operands. Operands, on the other hand, <em>must not</em> contain any white space. Operands may be simple numeric values, defined symbols, instruction labels, or complex expressions. Compare the <a href="6502_instruction_set.html" target="at_masswerk_6502_instset">6502 Instruction Set</a> for instruction details and addressing modes.</p>
+	<p>Here, we use &quot;HHLL&quot; to represent a word-sized 16-bit operand, &quot;LL&quot; for a single-byte addresses, and &quot;BB&quot; for any other byte-sized operands. (In actuality, these may be any simple or complex expressions.)</p>
+	<dl class="stxList">
+		<dt>CLC</dt><dd>immediate, no operand.</dd>
+		<dt>ROR A</dt><dd>instruction with accumulator as the operand.</dd>
+		<dt>ROR</dt><dd>same as above. &quot;A&quot; is optional and may be omitted.</dd>
+		<dt>LDA #BB</dt><dd>immediate mode, loading the literal value.</dd>
+		<dt>LDA HHLL</dt><dd>absolute, loads the value from the provided memory address.</dd>
+		<dt>LDA HHLL,X</dt><dd>absolute, X-indexed.</dd>
+		<dt>LDA HHLL,Y</dt><dd>absolute, Y-indexed.</dd>
+		<dt>LDA LL</dt><dd>zero-page address mode (with automatic address mode detection).</dd>
+		<dt>LDA *LL</dt><dd>forced zero-page address mode in the style of the original MOS assembler.</dd>
+		<dt>LDA.b LL</dt><dd>forced zero-page address mode, modern byte-size notation.</dd>
+		<dt>LDA.w LL</dt><dd>forced absolute address mode, modern word-size notation.</dd>
+		<dt>LDA LL,X</dt><dd>zero-page, X-indexed.</dd>
+		<dt>LDA LL,Y</dt><dd>zero-page, Y-indexed.</dd>
+		<dt>LDA (LL,X)</dt><dd>X-indexed, indirect.</dd>
+		<dt>LDA (LL),Y</dt><dd>indirect, Y-indexed.</dd>
+		<dt>LDA (LL)Y</dt><dd>indirect, Y-indexed, old MOS format (no comma).</dd>
+		<dt>JMP (HHLL)</dt><dd>indirect address.</dd>
+		<dt>BEQ HHLL</dt><dd>relative addresses (-127 &le; offset &le; +127) are computed from absolute target addresses.</dd>
+	</dl>
+	<p>Supported synonyms:</p>
+	<dl class="stxList">
+		<dt>LDA.byte LL</dt><dd>forced zero-page address mode.</dd>
+		<dt>LDA.by LL</dt><dd>as above.</dd>
+		<dt>LDA.word LL</dt><dd>forced absolute address mode, word-size.</dd>
+		<dt>LDA.wo LL</dt><dd>as above.</dd>
+		<dt>LDA+1 LL</dt><dd>forced zero-page address mode (like ACME assembler).</dd>
+		<dt>LDA+2 LL</dt><dd>forced absolute address mode, word-size (like ACME assembler).</dd>
+	</dl>
+	<p>Comments:</p>
+	<dl class="stxList">
+		<dt>;comment</dt><dd>comments start with a semicolon and extend to the end of the line.</dd>
+		<dt>\comment</dt><dd>in BBC mode, comments inside assembler blocks start with a backslash and extend to the end of the line or to the next colon (<span class="q">&quot;</span><code>:</code><span class="q">&quot;</span>).</dd>
+	</dl>
+	<p>Further, in BBC mode, immediate addressing may be denoted by a <span class="q">&quot;</span><code>@</code><span class="q">&quot;</span> prefix as in Acorn Atom BASIC:</p>
+	<dl class="stxList">
+		<dt>LDA @BB</dt><dd>alternative immediate adressing mode in Acorn Atom syntax (BBC mode only).</dd>
+	</dl>
+	<p>The assembler is generally case-insensitive, with the exception of strings and character literals.</p>
+	<p>Generally, there may be just a single instruction on each line. (In BBC mode, however, there may be multiple instructions on a line, separated by the BASIC colon oporator.)</p>
+	<h2>Values and Numeric Representations</h2>
+	<p>The assembler supports a variety of number formats:</p>
+	<dl class="stxList">
+		<dt>$12EF</dt><dd>hexadecimal <code>[0-9A-F]</code>.</dd>
+		<dt>&amp;12EF</dt><dd>hexadecimal.</dd>
+		<dt>0x12EF</dt><dd>hexadecimal.</dd>
+		<dt>1289</dt><dd>decimal <code>[0-9]</code>.</dd>
+		<dt>0d1289</dt><dd>decimal.</dd>
+		<dt>@1267</dt><dd>octal <code>[0-7]</code>.</dd>
+		<dt>0o1267</dt><dd>octal.</dd>
+		<dt>01267</dt><dd>octal.</dd>
+		<dt>%1010101</dt><dd>binary <code>[01]</code>.</dd>
+		<dt>0b1010101</dt><dd>binary.</dd>
+		<dt>'A</dt><dd>character value of &quot;A&quot; (<code>$41</code> in ASCII)</dd>
+	</dl>
+	<p>(In BBC mode, <span class="q">&quot;</span><code>$</code><span class="q">&quot;</span> is reserved for the BASIC indirection operator and <span class="q">&quot;</span><code>&amp;</code><span class="q">&quot;</span> denotes any hex-numbers.)</p>
+	<h2>Value Expressions</h2>
+	<p>Anywhere a value mayn occur this may be a complex expression as well. Expressions may include addition, subtraction, multiplication, divisions, and unary minus (<code>+-*/</code> and <code>-</code>).<p>
+	<p>There are also the two special unary byte operators <span class="q">&quot;</span><code>&lt;</code><span class="q">&quot;</span> and <span class="q">&quot;</span><code>&gt;</code><span class="q">&quot;</span>:</p>
+	<dl class="stxList">
+		<dt>&lt;$12EF</dt><dd>low-byte value <code>($EF)</code>.</dd>
+		<dt>&gt;$12EF</dt><dd>high-byte value <code>($12)</code>.</dd>
+	</dl>
+	<p>Please mind that <span class="q">&quot;</span><code>&lt;</code><span class="q">&quot;</span> and <span class="q">&quot;</span><code>&gt;</code><span class="q">&quot;</span> are just mathematical operators, like <span class="q">&quot;</span><code>&plus;</code><span class="q">&quot;</span> and <span class="q">&quot;</span><code>&minus;</code><span class="q">&quot;</span>, and do not imply anything regarding address modes (which are are still to be defined by a prefix, if applicable.)</p>
+	<p>Expressions are evaluated strictly from left to right, without precedence, but may be grouped using round or square brackets (<code>(&hellip;)</code>, <code>[&hellip;]</code>).<br />The use of square brackets is recommended, though, as round brackets can be ambiguous in the context of certain 6502 instructions and their syntax.</p>
+	<dl class="stxList">
+		<dt>1+2</dt><dd>3</dd>
+		<dt>2*3</dt><dd>6</dd>
+		<dt>1+2*3</dt><dd>9 &nbsp; (<code>1+2 =&gt; 3, 3*3 =&gt; 9</code>)</dd>
+		<dt>1+[2*3]</dt><dd>7 &nbsp; (<code>[2*3] =&gt; 6, 1+6 =&gt; 7</code>)</dd>
+		<dt>1+(2*3)</dt><dd>same as above</dd>
+	</dl>
+	<p>Expressions may include defined symbols and instruction labels.<br />Mind that there must not be any white space inside an expression.</p>
+	<p>BBC mode adds an emulation of the string related BASIC functions <span class="q">&quot;</span><code>ASC(<small>&lt;string-expr.&gt;</small>)</code><span class="q">&quot;</span> and <span class="q">&quot;</span><code>LENGTH(<small>&lt;string-expr.&gt;</small>)</code><span class="q">&quot;</span> outside of assembler blocks, and the construct '<code>ASC&quot;<small>&lt;character&gt;</small>&quot;</code>' inside assembler blocks.</p>
+
+	<h2>The Program Counter</h2>
+	<p>The program counter (also PC or location counter) represents the memory address of the current instruction. Outside of an instruction, it represents the address, where the next instruction will be inserted. There are several ways to address the program counter:</p>
+	<dl class="stxList wide">
+		<dt>* = $1234</dt><dd>the asterisk represents the &quot;native&quot; (MOS) format. Assigning to it sets the program counter.</dd>
+		<dt>BEQ *+2</dt><dd>the asterisk may be used in expressions as well.</dd>
+		<dt>* = *+4 $EA</dt><dd>when assigning to the program counter, an optional second argument specifies a fill-byte to be applied to any gaps. Here, we advance the program counter by 4 locations and fill the gap with <code>NOP</code> instructions (<code>$EA</code>).</dd>
+		<dt>P% = P%+2</dt><dd>the BBC BASIC-style symbol <span class="q">&quot;</span><code>P%</code><span class="q">&quot;</span> may be used synonymously to the asterisk anywhere the former may occur.</dd>
+		<dt>.ORG $1234</dt><dd>the more modern-style directive <span class="q">&quot;</span><code>.ORG</code><span class="q">&quot;</span> may be used for setting PC, as well. (However, you can't use ist in an expression.)</dd>
+		<dt>.ORG = $1234</dt><dd>you may use <code>.ORG</code> in assignment style, as well.</dd>
+		<dt>.ORG EQU $1234</dt><dd>generally, <span class="q">&quot;</span><code>EQU</code><span class="q">&quot;</span> may be used as the assignment operator, as well.<br />(Mind that there must be white-space around <span class="q">&quot;</span><code>EQU</code><span class="q">&quot;</span> in order for it to be recognized as a token, which is not a requirement with <span class="q">&quot;</span><code>=</code><span class="q">&quot;</span>.)</dd>
+		<dt>.RORG $1234</dt><dd>synonym to <span class="q">&quot;</span><code>.ORG</code><span class="q">&quot;</span> (in many assemblers you are not allowed to alter the origin set by <span class="q">&quot;</span><code>.ORG</code><span class="q">&quot;</span> and this is meant to provide compatibility.)</dd>
+		<dt>BEQ .+2</dt><dd>in expressions, a dot (<code>.</code>) may be used synonymously for the asterisk. However, you can not assign to it. (Strictly speaking, this is local context, but, while the assembler doesn't implement macros, it's the same anyway.)</dd>
+	</dl>
+	<p>In order to ensure compatibility, in BBC mode only <span class="q">&quot;</span><code>P%</code><span class="q">&quot;</span> is available.</p>
+
+	<h2>Relative Offset Literals</h2>
+	<p>As an extension to the standard syntax the assembler also allows relative offset literals for branch instructions (the <a href="6502_instruction_set.html#modes_relative" target="at_masswerk_6502_instset">relative offset</a> to <code>PC+2</code> as in machine code, instead of the usual target address)  with the <span style="white-space: nowrap;"><span class="q">&quot;</span><code>#</code><span class="q">&quot;</span> prefix</span> (same as immediate mode):</p>
+	<dl class="stxList wide">
+		<dt>BCS #0</dt><dd>equivalent to <span class="q">&quot;</span><code>BCS *+2</code><span class="q">&quot;</span>, results in <span class="q">&quot;</span><code>B0 00</code><span class="q">&quot;</span> (<code>$B0</code>: instruction code for <code>BCS</code>).</dd>
+		<dt>BCS #4</dt><dd>equivalent to <span class="q">&quot;</span><code>BCS *+6</code><span class="q">&quot;</span>, results in <span class="q">&quot;</span><code>B0 04</code><span class="q">&quot;</span>.</dd>
+		<dt>BCS #-4</dt><dd>equivalent to <span class="q">&quot;</span><code>BCS *-2</code><span class="q">&quot;</span>, results in <span class="q">&quot;</span><code>B0 FC</code><span class="q">&quot;</span> (<code>$FC</code>: <code>-4</code> in two's complement).</dd>
+		<dt>BCS #$FC</dt><dd>as above, results in <span class="q">&quot;</span><code>B0 FC</code><span class="q">&quot;</span>.</dd>
+		<dt>BCS #6-(2*5)</dt><dd>expressions allowed, equivalent to <span class="q">&quot;</span><code>BC #-4</code><span class="q">&quot;</span>, results in <span class="q">&quot;</span><code>B0 FC</code><span class="q">&quot;</span>.</dd>
+	</dl>
+	<p>Relative offset literals are automatically constrained to single-byte values in the range of <code>$00&hellip;$FF</code>:</p>
+	<dl class="stxList wide">
+		<dt>BCS #$104</dt><dd>results in <span class="q">&quot;</span><code>B0 04</code><span class="q">&quot;</span>.</dd>
+		<dt>BCS #$1FC</dt><dd>results in <span class="q">&quot;</span><code>B0 FC</code><span class="q">&quot;</span>.</dd>
+	</dl>
+
+	<h2>Labels and Symbols</h2>
+	<p>Instruction labels and defined symbols start with a letter character or underscore and may contain, letters, digits, or the underscore. (In BBC mode, a symbol may optionally end with a percent sign, <span class="q">&quot;</span><code>%</code><span class="q">&quot;</span>, like a BASIC integer variable.)<p>
+	<p>Please mind that, unless in BBC mode, only the first 12 characters are significant. This is for compatibility with older and historic sources. Use option <span class="q">&quot;</span><code>LONGNAMES</code><span class="q">&quot;</span> (see below) to disable this default.</p>
+	<p style="margin-top: 1.5em;">Instruction labels may precede an instruction or may be the only entity on a line. They may be optionally end in a trailing colon. Labels may be used anywhere in an expression:</p>
+	<dl class="stxList wide">
+		<dt>LOOP LDA A,X</dt><dd>declares the instruction label <code>LOOP</code>.</dd>
+		<dt>LOOP: LDA A,X</dt><dd>labels may end in a colon (optional).</dd>
+		<dt>BEQ LOOP</dt><dd>using a label as an address value.</dd>
+	</dl>
+	<dl class="stxList wide">
+		<dt>.LOOP LDA,X</dt><dd>In BBC mode, labels are declared with a preceding dot. However, there is no dot, when used as a value (compare the above example).</dd>
+	</dl>
+	<p>Optional <span class="q">&quot;</span><code>@</code><span class="q">&quot;</span> prefix for further compatibility (not applicable in BBC mode):</p>
+	<dl class="stxList wide">
+		<dt>@LOOP LDA,X</dt><dd>Unless in BBC mode, labels may be declared an optional  <span class="q">&quot;</span><code>@</code><span class="q">&quot;</span> prefix.</dd>
+		<dt>@LOOP: LDA,X</dt><dd>Same as above, but using a trailing colon.</dd>
+		<dt>BNE @LOOP</dt><dd>Unless in BBC mode, labels may be referred to using an optional  <span class="q">&quot;</span><code>@</code><span class="q">&quot;</span> prefix.</dd>
+	</dl>
+	<p>Symbols are declared by an assignment and may be used as values anywhere. (In BBC mode, you may not declare a symbol/variable inside an assembler block.)</p>
+	<dl class="stxList wide">
+		<dt>TEST = $2000</dt><dd>declares the symbol <span class="q">&ldquo;</span><code>TEST</code><span class="q">&rdquo;</span>.</dd>
+		<dt>TEST EQU $2000</dd><dd><span class="q">&ldquo;</span><code>EQU</code><span class="q">&rdquo;</span> may be used synonymously.</dd>
+		<dt>C = *+[TEST*2]</dt><dd>assignments may be complex expressions.</dd>
+	</dl>
+	<p>Mind that &mdash; like with most assemblers &mdash; you may not redefine or reuse any symbols or labels per default. However, you may change this behavior by setting option <span class="q">&quot;</span><code>REDEF</code><span class="q">&quot;</span> (see below). In BBC mode, you may reassign symbols (BASIC variables) outside of an assembler block out of the box.</p>
+
+	<h3>Note on hexadecimal values and automatic zero-page mode</h3>
+	<p>Any numeric values provided by at least 4 hexadecimal digits, where the two leading digits are zeros, will be considered to be of word-size and will effect absolute address modes, when used in ambiguuos context. This &quot;word-size tainting&quot; also propagates to expressions and assignments. (E.g., defining the symbol <span class="q">&quot;</span><code>C</code><span class="q">&quot;</span> by <span class="q">&quot;</span><code>C = 0x0002</code><span class="q">&quot;</span> and using this in <span class="q">&quot;</span><code>LDA C+2</code><span class="q">&quot;</span> will result in a word-sized, absolute instruction, while the effective value is well inside single-byte range. Defining <code>C</code> as <span class="q">&quot;</span><code>0x02</code><span class="q">&quot;</span>, on the other hand, would have resulted in a zero-page address mode instruction.)<br />If a label or symbol yet undefined is encountered in a value expression in pass #1, a word-size format will be automatically assumed and addresses will be reserved accordingly. If it is still undefined in pass #2, an error will be thrown. (In assignments to the program counter, however, an expression must resolve in pass #1 already, otherwise the assembly fails.)</p>
+
+
+	<h2>Anonymous (Temporary) Labels</h2>
+	<p>The assembler also supports anonymous labels for temporary branch and jump targets:<br />Just mark an instruction by <span class="q">&quot;</span><code>!</code><span class="q">&quot;</span> or <span class="q">&quot;</span><code>:</code><span class="q">&quot;</span> (empty label) and refer to this mark by either <span class="q">&quot;</span><code>!+</code><span class="q">&quot;</span> (or <span class="q">&quot;</span><code>:+</code><span class="q">&quot;</span>) for the next anonymous label as a target or by <span class="q">&quot;</span><code>!-</code><span class="q">&quot;</span> (or <span class="q">&quot;</span><code>:-</code><span class="q">&quot;</span>) for the previous one. You may refer to a target further away by repeating <span class="q">&quot;</span><code>+</code><span class="q">&quot;</span> or <span class="q">&quot;</span><code>-</code><span class="q">&quot;</span>. &nbsp;E.g., <span class="q">&quot;</span><code>BNE !--</code><span class="q">&quot;</span> branches to the second anonymous label before the insertion point. Mind that this counts anonymous labels and not addresses.</p>
+<p>Example:</p>
+<pre class="example">* = $800
+! START  LDA #0        ;first anonymous label
+                       ;anonymous labels may precede a normal label
+         LDX #0
+!                      ;just mark this address
+:        STA $1000,X   ;third label (same address), we may use &quot;:&quot; as well
+         INX
+         BNE !-        ;select the closest previous anonymous label
+         JMP :---      ;jump back 3 anonymous labels (same as START)
+                       ;again, &quot;:&quot; and &quot;!&quot; are synonymous</pre>
+    <p>This will assemble to (with anonymous labels listed in a column of their own):</p>
+<pre class="example">LOC   CODE         LABEL     INSTRUCTION
+
+0800  A9 00      ! START     LDA #$00
+0802  A2 00                  LDX #$00
+0804             !
+0804  9D 00 10   !           STA $1000,X
+0807  E8                     INX
+0808  D0 FA                  BNE $0804
+080A  4C 00 08               JMP $0800</pre>
+	<p style="margin-top: 1.5em">There is also support for an alternative grammar for anonymous targets, marking forward and backward references separately (like it's used by the ACME cross-assembler.)<br />Here, instructions used for forward references are marked by <span class="q">&quot;</span><code>+</code><span class="q">&quot;</span> and those to be used for backward references are marked by <span class="q">&quot;</span><code>&minus;</code><span class="q">&quot;</span>, each contributing to a dedicated list of anonymous labels. These are then referred to as a target address as above, but without any leading <span class="q">&quot;</span><code>!</code><span class="q">&quot;</span> or <span class="q">&quot;</span><code>:</code><span class="q">&quot;</span>. This is an important difference! Please mind that this is not just an alternative syntax, but comes with its own semantics.<br />(Hence, these targets are managed in separate lists. While not recommended, you could mix both grammars in a single source.)</p>
+<pre class="example">* = $800
+         BCS +         ;branch to exit
+         LDY #3
+         LDA $3000
+-        CLC           ;outer loop
+         ADC #5
+         LDX #5
+-        STA $1000,x   ;inner loop
+         DEX
+         BNE -
+         DEY
+         BNE --
++        RTS           ;forward target
+
+LOC   CODE         LABEL         INSTRUCTION
+
+0800                             * = $0800
+0800  B0 13                      BCS $0815   ;branch to exit
+0802  A0 03                      LDY #$03
+0804  AD 00 30                   LDA $3000
+0807  18         -               CLC         ;outer loop
+0808  69 05                      ADC #$05
+080A  A2 05                      LDX #$05
+080C  9D 00 10   -               STA $1000,X ;inner loop
+080F  CA                         DEX
+0810  D0 FA                      BNE $080C
+0812  88                         DEY
+0813  D0 F2                      BNE $0807
+0815  60         +               RTS         ;forward target</pre>
+	<p style="margin-top: 1.5em">Restrictions:<br />This feature is not available in BBC mode and is only supported for branch instructions and absolute jump targets. An anonymous target must be the sole operand and cannot be used in an arithmetic expression.</p>
+	<p>Note: Anonymous labels are not listed in symbol tables.</p>
+
+	<h2>Pragmas and Directives</h2>
+	<p>Pragmas and directives start generally with a dot. For enhanced compatibility, an exclamation mark (<span class="q">&quot;</span><code>!</code><span class="q">&quot;</span>) may be used as well, but will be normalized and show up as a dot in the listing of pass 2. The following examples use the dot for a general/canonical notation.</p>
+	<p>For directives in BBC mode, see below.</p>
+
+	<p style="margin-top: 1.5em;">Directives for embedding data:</p>
+	<dl class="stxList xwide">
+		<dt>.BYTE 1, $02</dt><dd>embeds a single byte or a list of bytes at the current location. Lists are sperated by white-space and/or commas. (An optional <span class="q">&quot;</span><code>#</code><span class="q">&quot;</span>, preceding any values, is ignored.) Values may be complex expressions, as well.</dd>
+		<dt>.DBYTE $12EF</dt><dd>embeds a double byte given in LLHH memory order (little-endian). This inserts the bytes <code>$12</code> and <code>$EF</code> at the current location. Again, complex expressionsare allowed and <span class="q">&quot;</span><code>.DBYTE</code><span class="q">&quot;</span> takes a list of values, as well.</dd>
+		<dt>.WORD $12EF</dt><dd>embeds a word given in HHLL order (human readable, big-endian). This inserts the bytes <code>$EF</code> and <code>$12</code> at the current location. (Also, use this when using previously defined labels and symbols in an expression.)<br />Again, values and expressions may be also provided as a list, as well.</dd>
+		<dt>.TEXT &quot;Abc&quot;</dt><dd>embeds a text literal (case-sensitive) using the current encoding (see below).</dd>
+		<dt>.ASCII &quot;Abc&quot;</dt><dd>embeds a text literal (case-sensitive) using ASCII encoding.</dd>
+		<dt>.PETSCII &quot;Abc&quot;</dt><dd>embeds a text literal (case-sensitive) using Commodore 8-bit encoding.</dd>
+		<dt>.PETSCR &quot;Abc&quot;</dt><dd>embeds a text literal (case-sensitive) as Commodore 8-bit screen codes.</dd>
+		<dt>.IMAGE &quot;X..XX.X.&quot;</dt><dd>embeds a byte represented by an image string.<br />Characters <span class="q">&quot;</span><code>X</code><span class="q">&quot;</span>, <span class="q">&quot;</span><code>x</code><span class="q">&quot;</span> or <span class="q">&quot;</span><code>#</code><span class="q">&quot;</span> are considered as binary 1, any others as binary 0.<br />E.g., <span class="q">&quot;</span><code>X..XX.X.</code><span class="q">&quot;</span> will be interpreted as <code>%10011010</code> or <code>$9A</code>.</dd>
+	</dl>
+	<p>Supported synonyms:</p>
+	<dl class="stxList xwide">
+		<dt>.WO $12EF</dt><dd>synonym for <span class="q">&quot;</span><code>.WORD</code><span class="q">&quot;</span>.</dd>
+		<dt>.BYT $01</dt><dd>synonym for <span class="q">&quot;</span><code>.BYTE</code><span class="q">&quot;</span>.</dd>
+		<dt>.BY $01</dt><dd>synonym for <span class="q">&quot;</span><code>.BYTE</code><span class="q">&quot;</span>.</dd>
+		<dt>.DB $02</dt><dd>synonym for <span class="q">&quot;</span><code>.BYTE</code><span class="q">&quot;</span> (Define Byte).</dd>
+		<dt>.DCB $03</dt><dd>synonym for <span class="q">&quot;</span><code>.BYTE</code><span class="q">&quot;</span> (Define Constant Byte).</dd>
+		<dt>.DBYT $12EF</dt><dd>synonym for <span class="q">&quot;</span><code>.DBYTE</code><span class="q">&quot;</span>.</dd>
+		<dt>.TX &quot;Abc&quot;</dt><dd>synonym for <span class="q">&quot;</span><code>.TEXT</code><span class="q">&quot;</span>.</dd>
+		<dt>.PET &quot;Abc&quot;</dt><dd>synonym for <span class="q">&quot;</span><code>.PETSCII</code><span class="q">&quot;</span>.</dd>
+		<dt>.C64SCR &quot;Abc&quot;</dt><dd>synonym for <span class="q">&quot;</span><code>.PETSCR</code><span class="q">&quot;</span>.</dd>
+		<dt>.IMG &quot;X..XX.X.&quot;</dt><dd>synonym for <span class="q">&quot;</span><code>.IMAGE</code><span class="q">&quot;</span>.</dd>
+	</dl>
+	<p>Directives for aligning code or filling space:</p>
+	<dl class="stxList wide">
+		<dt>.ALIGN $100</dt><dd>advances the program counter to the next multiple of the value provided (here, we align to the next memory page). Any gaps will be filled by zero. If no argument is provided <span class="q">&quot;</span><code>.ALIGN</code><span class="q">&quot;</span> aligns to the next even memory location.</dd>
+		<dt>.ALIGN $100 $EA</dt><dd>an optional second byte may specify a byte value to be used to fill any gaps (here <code>$EA</code>, <span class="q">&quot;</span><code>NOP</code><span class="q">&quot;</span>, as used by most Commodre 8-bit machines).</dd>
+		<dt>.FILL $20 $EA</dt><dd>fill the next <em>n</em> bytes using the value provided by the second argument. If no second argument is providing, zero will be used as the fill-byte.</dd>
+		<dt>.REPEAT <em>n</em></dt><dd>repeats the instruction or directive following this directive on the same line <em>n</em> times. An optional <span class="q">&quot;</span><code>STEP</code><span class="q">&quot;</span> parameter defines an increment to be applied to the repeat-counter on each iteration (default <code>1</code>). The repeat-counter is accessibly as <span class="q">&quot;</span><code>R%</code><span class="q">&quot;</span>.<br />E.g.,<pre class="example">.REPEAT 26 .BYTE 'A+R%</pre>will fill the next 26 memory locations with the letters of the alphabet.<pre class="example">ODD_NUMS ;generate list of odd numbers<br />.REPEAT 5 STEP 2 .BYTE 1+R%</pre>will fill the next 5 memory locations with the odd number series 1,3,5,7,9.<br /><br />And this will fill the next 6 bytes by the sequence <code>0x00</code>, <code>0x00</code>, <code>0x02</code>, <code>0x02</code>, <code>0x04</code>, <code>0x04</code>:
+		<pre class="example">.REPEAT 3 STEP 2 *=*+2 R% ;PC += 2, fill-byte R%</pre></dd>
+	</dl>
+	<p>Other directives:</p>
+	<dl class="stxList wide">
+		<dt>.END</dt><dd>ends the source code, any remaining text is ignored. (optional)</dd>
+		<dt>.NOLIST</dt><dd>switches listing output off (e.g, for data sections. This is also available as an option.)</dd>
+		<dt>.LIST</dt><dd>switches listing output on (default,  also available as an option).</dd>
+		<dt>.SKIP</dt><dd>inserts a blank line in the listing (pass #2). This is mostly for compatibility.</dd>
+		<dt>.PAGE</dt><dd>inserts a blank line and a page number in the listing (pass #2). Any comment found at the head of the source code will be used as a title. Again, this is mostly for compatibility.</dd>
+		<dt>.DATA</dt><dd>any such directive is ignored in order to ensure compatibility with symbol tables used by the companion <a href="disassembler.html" target="at_masswerk_6502_disassembler">disassembler</a>.</dd>
+	</dl>
+	<p>Special directives for Commodore BASIC:</p>
+	<dl class="stxList">
+		<dt>.PETSTART</dt><dd>Generates a short BASIC program, consisting of optional REM-lines and a line with a <span class="q">&quot;</span><code>SYS</code><span class="q">&quot;</span> command, jumping to the next available address immediately following this BASIC text (which starts at <code>0x0401</code>, the BASIC start address off the Commodore PET). The program counter will be advanced to this start address automatically.<br />Without any arguments, just a line with the <code>SYS</code> command will be generated, using the current year as the line number:
+		<pre>.PETSTART
+&gt; 2021 SYS 1038</pre>
+		If a first, numeric argument is provided, this will be used as a line number for the line holding the <code>SYS</code> statement:
+		<pre>.PETSTART 10
+&gt; 10 SYS 1038</pre>
+		If a string argument is provided, the assembler will generate a heading line with line number <span class="q">&quot;</span><code>0</code><span class="q">&quot;</span> and a <code>REM</code> statement using this string. If a list of strings (separated by white-space and optionally commas) is provided, or a string contains a line-break (<span class="q">&quot;</span><code>\n</code><span class="q">&quot;</span>), multiple <code>REM</code> lines will be generated:
+		<pre>.PETSTART 2001 &quot;*** a program ***&quot;, &quot;(c) example.com&quot;
+&gt; 0 REM *** A PROGRAM ***
+&gt; 1 REM (c) EXAMPLE.COM
+&gt; 2001 SYS 1084</pre>
+		(Mind that lower case letters will appear as upper-case and upper-case letters as graphics characters in standard PETSCII upper-case/graphics mode.)</dd>
+		<dt>.C64START</dt><dd>Same as <span class="q">&quot;</span><code>.PETSTART</code><span class="q">&quot;</span> (see above), but arranging for a BASIC start address of <code>0x0801</code>, suitable for the C64.</dd>
+	</dl>
+	<p>In BBC mode, directives do not have a preceding dot and are available only inside assembler blocks. The following directives are available in BBC mode (these are actually additions to the original BBC BASIC and were introduced with Level II, 1982 issue):</p>
+	<dl class="stxList wide">
+		<dt>EQUB &01, &02</dt><dd>inserts a byte value (may be a comma-separated list).</dd>
+		<dt>EQUW &12EF</dt><dd>inserts a word or a comma-separated list of words.</dd>
+		<dt>EQUD &11223344</dt><dd>inserts a series of 4 bytes, starting at the highest significant one. Here, we insert the byte series <code>0x11</code>, <code>0x22</code>, <code>0x33</code>, <code>0x44</code>, starting at the current memory location.</dd>
+		<dt>EQUS &quot;Abc&quot;</dt><dd>inserts a text literal (case-sensitive). This must be a single item (not a list), but may be a string concatenation, including the BASIC function <span class="q">&quot;</span><code>CHR$()</code><span class="q">&quot;</span>.<br />E.g., <pre class="example">EQUS CHR$(34)+&quot;foo&quot;+&quot;bar&quot;+CHR$(34)</pre>will insert the character sequence '<code>&quot;foobar&quot;</code>'.</dd>
+		<dt>ALIGN</dt><dd>in BBC mode <span class="q">&quot;</span><code>ALIGN</code><span class="q">&quot;</span> does not take any arguments and aligns the location counter <span class="q">&quot;</span><code>P%</code><span class="q">&quot;</span> to the next multiple of 4. Any gaps are filled with <code>0xFF</code>. (This is an even later addition to the standard.)</dd>
+	</dl>
+
+	<h2>Options</h2>
+	<p>Options are a special set of directives switching the behavior of the assembler. Like other pragmas, they start with a dot (<code>.</code>) or an eclamation mark (<code>!</code>).</p>
+	<dl class="stxList wide">
+		<dt>.OPT WORDA</dt><dd>switches automatic zero-page detection for address modes off. All addresses default to word-size and zero-page address modes must be specified manually by a leading asterisk (<span class="q">&quot;</span><code>*</code><span class="q">&quot;</span>) or the byte extension (<span class="q">&quot;</span><code>.b</code><span class="q">&quot;</span>). Use this for fine grain control and/or compatibility with old sources.</dd>
+		<dt>.OPT ZPGA</dt><dd>switches automatic zero-page detection to <em>on</em> (default).</dt>
+		<dt>.OPT ZPA</dt><dd>synonym to option <span class="q">&quot;</span><code>ZPGA</code><span class="q">&quot;</span>.</dt>
+		<dt>.OPT ILLEGALS</dt><dd>enables support for “illegal” op-codes (see below).</dt>
+		<dt>.OPT LEGALS</dt><dd>disables support for “illegal” op-codes (default).</dt>
+		<dt>.OPT NOILLEGALS</dt><dd>synonym to option <span class="q">&quot;</span><code>LEGALS</code><span class="q">&quot;</span>.</dt>
+		<dt>.OPT REDEF</dt><dd>allows symbols and labels to be redefined / reused.</dt>
+		<dt>.OPT NOREDEF</dt><dd>reuse of symbols is not allowed and will throw an error (default).</dt>
+		<dt>.OPT ASCII</dt><dd>set character encoding for <span class="q">&ldquo;</span><code>.TEXT</code><span class="q">&rdquo;</span>-directives and character literals to ASCII (default).</dt>
+		<dt>.OPT PETSCII</dt><dd>set the default character encoding to PETSCII.</dt>
+		<dt>.OPT PET</dt><dd>as above.</dt>
+		<dt>.OPT PETSCR</dt><dd>set the default character encoding to Coomodore 8-bit screen characters.</dt>
+		<dt>.OPT C64SCR</dt><dd>synonym to option <span class="q">&quot;</span><code>PETSCR</code><span class="q">&quot;</span>.</dt>
+		<dt>.OPT NOLIST</dt><dd>switches listing output off.</dt>
+		<dt>.OPT LIST</dt><dd>witches listing output on (default).</dt>
+		<dt>.OPT LONGNAMES</dt><dd>disables the default 12 character limit for the significance of labels and identifiers for unlimited length.</dt>
+	</dl>
+
+	<p>Further, the following options (mostly used by MOS assemblers) are recognized for compatibility, but are otherwise ignored: <code>XREF</code>, <code>NOXREF</code>, <code>COUNT</code>, <code>NOCOUNT</code>, <code>CNT</code>, <code>NOCNT</code>, <code>MEMORY</code>, <code>NOMEMORY</code>, <code>GENERATE</code>, <code>NOGENERATE</code>.</p>
+
+	<p>In BBC mode, options evaluating to numeric values (BBC BASIC reprorting levels) are ignored. Other, you may use any of the above options, but whitout the leading dot (e.g., <span class="q">&quot;</span><code>OPT ILLEGALS</code><span class="q">&quot;</span>).</p>
+
+	<h2>Compatibility</h2>
+	<p>This assembler is all about a quick assembly session without worrying too much about the specific syntax (starting with the format of the very first MOS cross-assembler and extending to more modern styles). As long as you do not require macros or conditional assembly, you should be able to throw about any style of source code at it.</p>
+	<p>E.g., the following examples are semantically identical and produce the same object code:</p>
+	<table class="xmptable">
+	<tr><td><pre>;MOS/traditional
+
+* = $4000
+TARGET = $20
+
+       LDY *$20
+LOOP   LDA $0080,Y
+       ROL A
+       STA (TARGET)Y
+       DEY
+       BNE LOOP
+       RTS
+.END</pre></td>
+<td><pre>;modern style
+
+.ORG 0x4000
+TARGET EQU 0xC0
+
+       LDY.b 0x20
+LOOP:  LDA.w 0x80,Y
+       ROL
+       STA (TARGET),Y
+       DEY
+       BNE LOOP
+       RTS
+.END</pre></td>
+<td><pre>\BBC Micro mode
+
+P% = &4000
+TARGET = &C0
+[
+       LDY &20
+.LOOP  LDA &80,Y
+       ROL
+       STA (TARGET),Y
+       DEY:BNE LOOP
+       RTS
+]
+END</pre></td>
+</tr>
+</table>
+
+	<h2>Processing Example</h2>
+	<p>Here is an example for a complete assembly of a short source: <a href="#" onclick="assembler.loadSource(document.getElementById('samplecode').innerHTML, false, true);return false;" title="insert sample code and run assembler&hellip;" style="margin-left: 0.5em;">[ try it ]</a></p>
+
+	<table class="xmptable">
+	<tr><td>Source code:<br /><br />
+<pre id="samplecode">;fill a page with bytes,
+;preserve program
+
+*=$800
+
+start
+      ldx #offset
+loop  txa
+      sta start,x
+      inx
+      bne loop
+      brk
+
+;insert bytes here
+offset=*-start
+.end</pre>
+<br /><br /><br />
+Object code:<br /><br />
+<pre>0800: A2 0A 8A 9D 00 08 E8 D0
+0808: F9 00</pre>
+<br /><br /><br />
+<em>Note:<br />
+Press &quot;Show Memory&quot; and activate &quot;live update&quot; in the emulator.</em></td>
+<td>Listing:<br /><br />
+<pre>pass 1
+
+LINE  LOC          LABEL     PICT
+
+   1               ;fill a page with bytes,
+   2               ;preserve program
+
+   4  0800                   * = $800
+   6  0800         START
+   7  0800                   LDX #OFFSET
+   8  0802         LOOP      TXA
+   9  0803                   STA START,X
+  10  0806                   INX
+  11  0807                   BNE LOOP
+  12  0809                   BRK
+  14                         ;insert bytes here
+  15                         OFFSET = *-START
+  16                         .END
+
+symbols
+ LOOP       $0802
+ OFFSET       $0A
+ START      $0800
+
+pass 2
+
+LOC   CODE         LABEL     INSTRUCTION
+
+                   ;fill a page with bytes,
+                   ;preserve program
+
+0800                         * = $0800
+0800               START
+0800  A2 0A                  LDX #$0A
+0802  8A           LOOP      TXA
+0803  9D 00 08               STA $0800,X
+0806  E8                     INX
+0807  D0 F9                  BNE $0802
+0809  00                     BRK
+                             ;insert bytes here
+                             OFFSET = $0A
+                             .END
+
+done (code: 0800..0809).</pre></td>
+	</tr></table>
+
+	<h2>About BBC Micro Compatibility Mode</h2>
+	<p>The BBC Micro computers had a quite powerful and versatile implementation of BASIC (BBC BASIC), which in turn built on the BASIC implementation of the Acorn Atom computer. One of its features was a built-in assembler, allowing users to embed assembler code directly in their BASIC sources. <em>&quot;BBC Micro mode&quot;</em> (enabled by the equally named checkbox) adds basic compatibility for the syntax of this embedded assembler of BBC BASIC.</p>
+	<p>This is not an attempt at a complete or strict emulation. You may even use some of the features of standard mode, where these do not conflict with the BBC syntax, e.g., <span class="q">&quot;</span><code>0x...</code><span class="q">&quot;</span> style number formats or character literals like <span class="q">&quot;</span><code>'A</code><span class="q">&quot;</span>. Moreover, you may use the assembler even without assembly explicit blocks (<span class="q">&quot;</span><code>[&hellip;]</code><span class="q">&quot;</span>) for a quick session. (However, some features, like assembler directives, are restricted to assembler blocks.)</p>
+	<p>BASIC line numbers are recognized, but simply ignored and are not evaluated for sequence. Similarly, <code>FOR-NEXT</code> loops are ignored (the loop variable will be registered, but will always evaluate to zero), as are <code>DIM</code>, <code>CALL</code>, <code>DEF</code>, <code>ENDPROC</code>, and <code>PRINT</code> statements. Options evaluating to a numeric argument (as used for reporting levels) are generally ignored, but will list a warning. <code>REM</code> statements are allowed outside assembler blocks and the colon (<span class="q">&quot;</span><code>:</code><span class="q">&quot;</span>) may be used as a statement/instruction separator anywhere in the code. (As opposed to standard mode, there may be multiple statements or instructions on a line.)</p>
+	<p>There is also support for BBC BASIC indirection operators, BBC BASIC's way of accessing memory, outside of assembler blocks. These are <span class="q">&quot;</span><code>?<em>M</em></code><span class="q">&quot;</span> (query), <span class="q">&quot;</span><code>$<em>M</em></code><span class="q">&quot;</span> (dollar), <span class="q">&quot;</span><code>!<em>M</em></code><span class="q">&quot;</span> (pling) with their variations <span class="q">&quot;</span><code><em>M</em>?<em>N</em></code><span class="q">&quot;</span> and <span class="q">&quot;</span><code><em>M</em>$<em>N</em></code><span class="q">&quot;</span> for the left-hand side of assignements. These will be mostly used with <span class="q">&quot;</span><code>P%</code><span class="q">&quot;</span> for the purpose of embedding data. <span class="q">&quot;</span><code>$P%</code><span class="q">&quot;</span> is also supported for the right-hand side, including an emulation of the BASIC function <span class="q">&quot;</span><code>LENGTH($P%)</code><span class="q">&quot;</span>.</p>
+	<p>There is basic support for string concatenations and the string related BASIC functions <span class="q">&quot;</span><code>ASC()</code><span class="q">&quot;</span>, <span class="q">&quot;</span><code>CHR$()</code><span class="q">&quot;</span>, <span class="q">&quot;</span><code>LENGTH()</code><span class="q">&quot;</span>, and <span class="q">&quot;</span><code>STRING$()</code><span class="q">&quot;</span>. E.g, you may things like,</p><pre class="example">L = (LEN($P%+&quot;foo&quot;+&quot;bar&quot;+CHR$(33))+4)*2+ASC(&quot;A&quot;)</pre>
+	<p>(These string and expressions related features are implemented as preprocessors. While errors will be reported in detail, the listing of a successful assembly will onyl include values as returned by these preprocessors.)</p>
+	<p>Besides the support of BASIC indirection operators, there's also support for the assembler directives used in BBC BASIC Level II for embeding literal values &mdash; <code>EQUB</code>, <code>EQUW</code>, <code>EQUD</code>, and <code>EQUS</code> &mdash; inside assembler block, as well as for <code>ASC&quot;<small>&lt;char&gt;</small>&quot;</code>. (So you may embed any data using your preferred method.)</p>
+	<p>Moreover, you may reassign any symbols (BASIC variables) outside of an assembler block, even without explicitly setting <span class="q">&quot;</span><code>OPT REDEF</code><span class="q">&quot;</span>.</p>
+	<p>Since assembler code was often wrapped in <code>FOR</code> loops for various passes with logging levels passed in <code>OPT</code> statements, these are recognized, as well, but ignored. (A variable defined in a <code>FOR</code> loop will be lexically known, but its value will be zero.) This is also true for a few other BASIC statements often found in the context of an assembler program, like <code>DIM</code> (as used to allocate some space for data), <code>PRINT</code> statements, and <code>DEF</code> and <code>ENDPROC</code> keywords, which may wrap the entire assembler source, as well as any <code>CALL</code> statements for executing the resulting machine code.</p>
+	<p>However, there are some unsupported features, as well,</p>
+	<ul>
+	<li>The assembler is still case-insensitive. (Variable <span class="q">&quot;</span><code>TEST</code><span class="q">&quot;</span> is the same as variable <span class="q">&quot;</span><code>test</code><span class="q">&quot;</span>).</li>
+	<li>The assembler doesn't &quot;know&quot; about BASIC keywords. (Variables may have the names of BASIC keywords. This kind of works around the case issue.)</li>
+	<li>There is no support for any BASIC functions, besides the string functions mentioned above.</li>
+	<li>Expressions are still evaluated strictly from left to right, without precedence, using square brackets for grouping. (However, you may use normal parentheses in assignments.)</li>
+	<li>There is no support for string variables, besides an emulation of the indirection <span class="q">&quot;</span><code>$P%</code><span class="q">&quot;</span>.</li>
+</ul>
+<p>Still, there's sufficient support to successfully assemble a source like this:</p>
+<pre class="example">100 REM THIS IS BASIC
+110 P% = &4000 : REM SET LOCATION COUNTER
+120 TARGET = &4100 : REM A VARIABLE
+130 FOR C=0 TO 2 STEP 2 : REM PASS LOOP (ignored)
+140 [OPT C              \now in asm mode
+150     LDX #&20        \copy 32 bytes
+160 .LOOP  LDA SOURCE,X
+170     STA TARGET,X
+180     DEX:BNE LOOP    \two in a row!
+190 .SOURCE
+200 ]NEXT : REM BACK TO BASIC
+210 $P%=&quot;:-) &quot;+STRING$(28,&quot;*&quot;)
+220 P%=P%+LEN($P%) : REM UPDATE LOCATION
+230 END</pre>
+
+	<p>Please refer to a manual for the BBC Micro for further details.</p>
+
+	<h2>Illegal Opcodes</h2>
+	<p>Support for <a href="6502_instruction_set.html#illegals" target="at_masswerk_6502_instset">&quot;illegal&quot; opcodes</a> (undefined instructions) is enabled by the pragma <span class="q">&quot;</span><code>.OPT ILLEGALS</code><span class="q">&quot;</span>.</p>
+	<p>The following mnemonics are implemented (supported synonyms in parentheses):</p>
+
+	<table border="0" cellspacing="0" cellpadding="0" class="opctable">
+	<tr class="noBg"><td><em>opc (synonyms)</em>   imp imm abs abX abY zpg zpX zpY inX inY</td></tr>
+	<tr class="noBg"><td>&nbsp;</td></tr>
+	<tr><td>ALR (ASR)       <span class="dimm">|</span>     4B                                 <span class="dimm">|</span></td></tr>
+	<tr><td>ANC             <span class="dimm">|</span>     0B                                 <span class="dimm">|</span></td></tr>
+	<tr><td>ANC2            <span class="dimm">|</span>     2B                                 <span class="dimm">|</span></td></tr>
+	<tr><td>ANE (XAA)       <span class="dimm">|</span>     8B                                 <span class="dimm">|</span></td></tr>
+	<tr><td>ARR             <span class="dimm">|</span>     6B                                 <span class="dimm">|</span></td></tr>
+	<tr><td>DCP (DCM)       <span class="dimm">|</span>         CF  DF  DB  C7  D7      C3  D3 <span class="dimm">|</span></td></tr>
+	<tr><td>ISC (ISB, INS)  <span class="dimm">|</span>         EF  FF  FB  E7  F7      E3  F3 <span class="dimm">|</span></td></tr>
+	<tr><td>LAS (LAR, LAE)  <span class="dimm">|</span>                 BB                     <span class="dimm">|</span></td></tr>
+	<tr><td>LAX (ATX)       <span class="dimm">|</span>     AB  AF      BF  A7      B7  A3  B3 <span class="dimm">|</span></td></tr>
+	<tr><td>LXA (LAX imm)   <span class="dimm">|</span>     AB                                 <span class="dimm">|</span></td></tr>
+	<tr><td>RLA             <span class="dimm">|</span>         2F  3F  3B  27  37      23  33 <span class="dimm">|</span></td></tr>
+	<tr><td>RRA             <span class="dimm">|</span>         6F  7F  7B  67  77      63  73 <span class="dimm">|</span></td></tr>
+	<tr><td>SAX (AXS, AAX)  <span class="dimm">|</span>         8F          87      97  83     <span class="dimm">|</span></td></tr>
+	<tr><td>SBX             <span class="dimm">|</span>     CB                                 <span class="dimm">|</span></td></tr>
+	<tr><td>SHA (AXA, AHX)  <span class="dimm">|</span>                 9F                  93 <span class="dimm">|</span></td></tr>
+	<tr><td>SHX             <span class="dimm">|</span>                 9E                     <span class="dimm">|</span></td></tr>
+	<tr><td>SHY (SAY, SYA)  <span class="dimm">|</span>             9C                         <span class="dimm">|</span></td></tr>
+	<tr><td>SLO (ASO)       <span class="dimm">|</span>         0F  1F  1B  07  17      03  13 <span class="dimm">|</span></td></tr>
+	<tr><td>SRE (LSE)       <span class="dimm">|</span>         4F  5F  5B  47  57      43  53 <span class="dimm">|</span></td></tr>
+	<tr><td>TAS (SHS, XAS)  <span class="dimm">|</span>                 9B                     <span class="dimm">|</span></td></tr>
+	<tr><td>USBC            <span class="dimm">|</span>     EB                                 <span class="dimm">|</span></td></tr>
+	<tr><td>NOP             <span class="dimm">|</span> EA  80  0C  1C      04  14             <span class="dimm">|</span></td></tr>
+	<tr><td>DOP (SKB)       <span class="dimm">|</span>     80              04  14             <span class="dimm">|</span></td></tr>
+	<tr><td>TOP (SKW)       <span class="dimm">|</span>         0C  1C                         <span class="dimm">|</span></td></tr>
+	<tr><td>JAM (HLT, KIL)  <span class="dimm">|</span> 02                                     <span class="dimm">|</span></td></tr>
+	</table>
+
+	<p>Notes:</p>
+	<ul style="margin-top: 0.25em;">
+		<li><code>NOP</code>: There are several <code>NOP</code> instructions, but these are the ones commonly used.</li>
+		<li><code>DOP</code>: &quot;double <code>NOP</code><span class="q">&quot;</span> (single-byte operand/address, 2 bytes total).</li>
+		<li><code>TOP</code>: &quot;triple <code>NOP</code><span class="q">&quot;</span> (word-address, 3 bytes total).</li>
+		<li><code>JAM</code>: freezes the CPU (again, there are several equivalent instructions).</li>
+	</ul>
+
+	<h1>Disclaimer</h1>
+	<p>This application is provided for free and AS IS, therefore without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose. Use at own risk.</p>
+	<p>This application uses either Web Storage technology or, if this is not available, a cookie to store your choice for the preferred color mode for the <em>virtual 6502</em> suite of applications. (Either the word &quot;light&quot; or the word &quot;dark&quot; is stored.)</p>
+	
+	<h1>Fun Fact</h1>
+	<p>This assembler evolved from a Commodore BASIC program written in the 1980s, which was ported to HTML/JavaScript in 2005 and has since been substantially enhanced. Extended functionally, BBC Micro compatibility, and new GUI added in 2021.</p>
+
+	<h1>Other Resources</h1>
+	<p>You may be also interested in&hellip;</p>
+	<h2>Data Transfer Using BASIC</h2>
+	<p>An 8-bit machine usually comes with BASIC on board. You may use this to transfer the object code to memory using DATA statements. See this little tool to generate such code from the output of the assembler (copy &amp; paste the object code): <a href="bytes2basic.html" target="at_masswerk_6502_bytes2basic">bytes2basic.html</a>.</p>
+
+	<h2>Related Links</h2>
+	<ul>
+		<li><a href="http://6502.org/" target="_blank" rel="noopener">6502.org</a> &mdash; the 6502 microprocessor resource</li>
+		<li><a href="http://www.visual6502.org/" target="_blank" rel="noopener">visual6502.org</a> &mdash; visual transistor-level simulation of the 6502 CPU</lli>
+		<li><a href="http://www.65xx.com/" target="_blank" rel="noopener">www.65xx.com</a> &mdash; official 65xx Website (The Western Design Center Inc.)</li>
+	</ul>
+
+	<p style="margin-top: 1.5em;">&copy; Norbert Landsteiner 2005&ndash;2023, <a href="https://masswerk.at/" target="_blank">mass:werk</a></p>
+</section>
+
+</main>
+<footer role="contentinfo" aria-label="footer">
+	<div id="footer_content" role="presentation">
+		<small id="siteinfo">
+			&copy; 2005&ndash;2023&nbsp; N. Landsteiner, <a href="/" title="Home">mass:werk &ndash; media environments</a>
+		</small>
+	</div>
+</footer>
+
+<section id="infoDialog" class="dialog" hidden>
+	<div class="dialogWrapper">
+		<div class="dialogContent">
+			<h1 id="infoDialogTitle" class="dialogTitle"></h1>
+			<p id="infoDialogText" class="dialogText"></p>
+		</div>
+		<menu>
+			<input type="button" id="infoDialogBtnClose" class="dialogButton defaultButton" value="OK" />
+		</menu>
+	</div>
+</section>
+
+<section id="downloadDialog" class="dialog" hidden>
+	<div class="dialogWrapper">
+		<div class="dialogContent">
+			<h1 class="dialogTitle">Binary Object File Download</h1>
+			<form id="downloadDialogForm" action="#" onsubmit="return false;">
+			<fieldset>
+				<legend>Select a format:</legend>
+				<p><input type="radio" name="radioBinaryFormat" id="radioBinaryFormatBin" value="bin" checked /> <label for="radioBinaryFormatBin">Standard Binary</label></p>
+				<p><input type="radio" name="radioBinaryFormat" id="radioBinaryFormatPrg" value="prg" /> <label for="radioBinaryFormatPrg">Commodore PRG</label></p>
+			</fieldset>
+			<p class="dialogText" style="text-align: right; margin-top: 0;"><input type="button" id="downloadDialogBtnGenerate" class="dialogButton defaultButton" value="Generate" />
+			</p></form>
+			<p class="dialogText" style="padding: 0.25em 0 0.25em 1.25em;" id="downloadDialogLinkPane">&nbsp;</p>
+		</div>
+		<menu>
+			<input type="button" id="downloadDialogBtnClose" class="dialogButton" value="Close" />
+		</menu>
+	</div>
+</section>
+</html>
