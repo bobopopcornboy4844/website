@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arduino Serial Console</title>
+<style>
+  body { font-family: monospace; padding: 20px; }
+  .log-container { display: flex; gap: 20px; }
+  .log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; width: 50%; white-space: pre; }
+  #input { width: 60%; }
+  button { margin-right: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Arduino Serial Console</h1>
+
+<button id="connect">Connect Arduino</button>
+<br><br>
+
+<select id="mode">
+  <option value="ascii">ASCII</option>
+  <option value="hex">Hex</option>
+  <option value="dec">Decimal</option>
+</select>
+<input type="text" id="input" placeholder="Type your command here">
+<button id="send">Send</button>
+<button id="clearLogs">Clear Logs</button>
+
+<h2>Arduino Output</h2>
+<div class="log-container">
+  <div class="log" id="asciiLog"></div>
+  <div class="log" id="hexLog"></div>
+</div>
+
+<script>
+let port;
+let writer;
+let reader;
+
+const asciiLog = document.getElementById("asciiLog");
+const hexLog = document.getElementById("hexLog");
+
+function logASCII(msg) {
+  asciiLog.textContent += msg;
+  asciiLog.scrollTop = asciiLog.scrollHeight;
+}
+
+function logHex(bytes) {
+  const hexStr = Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join(" ");
+  hexLog.textContent += hexStr + " ";
+  hexLog.scrollTop = hexLog.scrollHeight;
+}
+
+// ----------------- Connect -----------------
+async function connect() {
+  port = await navigator.serial.requestPort();
+  await port.open({ baudRate: 115200 });
+
+  writer = port.writable.getWriter();
+  reader = port.readable.getReader();
+
+  logASCII("Connected to Arduino.\n");
+  logHex(new Uint8Array([]));
+
+  readLoop(); // start reading Arduino output
+}
+
+// ----------------- Read loop -----------------
+async function readLoop() {
+  while (true) {
+    try {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      let asciiLine = "";
+      let hexLine = "";
+
+      value.forEach(b => {
+        // ASCII log: allow printable characters, \n and \r
+        if ((b >= 32 && b <= 126) || b === 10 || b === 13) {
+          asciiLine += String.fromCharCode(b);
+        } else {
+          asciiLine += ".";
+        }
+
+        // Hex log
+        hexLine += b.toString(16).padStart(2, "0") + " ";
+
+        // If byte is newline, flush lines
+        if (b === 10) { // LF
+          logASCII(asciiLine);
+          logHex(hexLine + "\n"); // also start a new line in hex log
+          asciiLine = "";
+          hexLine = "";
+        }
+      });
+
+      // flush any remaining bytes that didn’t end with newline
+      if (asciiLine.length > 0) {
+        logASCII(asciiLine);
+        logHex(hexLine + "\n");
+      }
+
+    } catch (err) {
+      logASCII("Read error: " + err + "\n");
+      break;
+    }
+  }
+}
+
+// ----------------- Send input -----------------
+async function sendInput() {
+  const mode = document.getElementById("mode").value;
+  let input = document.getElementById("input").value.trim();
+  let bytes = [];
+
+  if (!input) return;
+
+  if (mode === "ascii") {
+    for (let i = 0; i < input.length; i++) {
+      bytes.push(input.charCodeAt(i));
+    }
+  } else if (mode === "hex") {
+    input = input.replace(/\s+/g, '');
+    if (input.length % 2 !== 0) {
+      alert("Hex string must have even length");
+      return;
+    }
+    for (let i = 0; i < input.length; i += 2) {
+      bytes.push(parseInt(input.substr(i, 2), 16));
+    }
+  } else if (mode === "dec") {
+    input.split(/[\s,]+/).forEach(d => {
+      if (d) bytes.push(parseInt(d, 10));
+    });
+  }
+
+  await writer.write(new Uint8Array(bytes));
+
+  logHex(new Uint8Array(bytes));
+  logASCII(input + "\n");
+
+  document.getElementById("input").value = "";
+}
+
+// ----------------- Clear logs -----------------
+function clearLogs() {
+  asciiLog.textContent = "";
+  hexLog.textContent = "";
+}
+
+// ----------------- Event listeners -----------------
+document.getElementById("connect").addEventListener("click", connect);
+document.getElementById("send").addEventListener("click", sendInput);
+document.getElementById("input").addEventListener("keydown", e => {
+  if (e.key === "Enter") sendInput();
+});
+document.getElementById("clearLogs").addEventListener("click", clearLogs);
+</script>
+
+</body>
+</html>
